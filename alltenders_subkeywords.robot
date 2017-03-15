@@ -28,42 +28,28 @@ Resource	alltenders_utils.robot
 	Sleep						1
 	#	--- check for dialog ---
 	${status}=	Run Keyword And Return Status  Page Should Contain Element  ${dialog}
-	Run Keyword If  ${status}  Підтвердити дію в діалозі
-	...			ELSE	 Wait For Progress Bar
+	Run Keyword If  ${status}  Підтвердити дію в діалозі  ELSE  Wait For Progress Bar
 	#	--- get data by Angular
 	${lot_index}=				Get Data By Angular		lots.length
 	${lot_index}=				Evaluate				${lot_index}-${1}
-	${valueAddedTaxIncluded}=	Get Data By Angular		lots[${lot_index}].value.valueAddedTaxIncluded
-	${idxs}=					Create List				${lot_index}
 	#	--- fill lot attributes ---
-	Build Xpath and Run Keyword	${idxs}  Wait and Input Text			${tender.form.lot.title}		${lot.title}
-	Build Xpath and Run Keyword	${idxs}  Wait and Input Text			${tender.form.lot.description}	${lot.description}
-	Build Xpath and Run Keyword	${idxs}  Wait and Input Text			${tender.form.lot.amount}		${lot.value.amount}
-	Run Keyword If  '${lot.value.valueAddedTaxIncluded}' != '${valueAddedTaxIncluded}'
-	...		Build Xpath and Run Keyword	${idxs}  Wait and Click CheckBox	${tender.form.lot.taxIncluded}
-	Build Xpath and Run Keyword	${idxs}  Wait and Input Text			${tender.form.lot.minimalStep}	${lot.minimalStep.amount}
-	#	--- fill multi-languages attributes by JS ---
-	Run Keyword And Ignore Error  Set Data By Angular  lots[${lot_index}].description_ru						"${lot.description_ru}"
-	Run Keyword And Ignore Error  Set Data By Angular  lots[${lot_index}].description_en						"${lot.description_en}"
-	Run Keyword And Ignore Error  Set Data By Angular  lots[${lot_index}].title_ru								"${lot.title_ru}"
-	Run Keyword And Ignore Error  Set Data By Angular  lots[${lot_index}].title_en								"${lot.title_en}"
-	#	--- fill other by JS ---
-	Run Keyword And Ignore Error  Set Data By Angular  lots[${lot_index}].id  									"${lot.id}"
-	Run Keyword And Ignore Error  Set Data By Angular  lots[${lot_index}].minimalStep.currency					"${lot.minimalStep.currency}"
-	Run Keyword And Ignore Error  Set Data By Angular  lots[${lot_index}].minimalStep.valueAddedTaxIncluded		${lot.minimalStep.valueAddedTaxIncluded}
-	Run Keyword And Ignore Error  Set Data By Angular  lots[${lot_index}].value.currency						"${lot.value.currency}"
+	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].id  					"${lot.id}"
+	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].title				"${lot.title}"
+	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].title_ru				"${lot.title_ru}"
+	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].title_en				"${lot.title_en}"
+	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].description			"${lot.description}"
+	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].description_ru		"${lot.description_ru}"
+	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].description_en		"${lot.description_en}"
+	Run Keyword And Ignore Error  Set Object By Angular	lots[${lot_index}].value  				${lot.value}
+	Run Keyword And Ignore Error  Set Object By Angular	lots[${lot_index}].minimalStep  		${lot.minimalStep}
 	[Return]	${lot_index}
 	
 Додати лоти
 	[Arguments]		${lots}
 	[Documentation]
 	...		lot: The lot's data
-	${lot_map}=		Create Dictionary
 	:FOR  ${lot}  IN  @{lots}
-	\	${index}=			Додати лот			${lot}
-	\	${lot_data}=		Create Dictionary	index=${index}  		items_count=${0}
-	\	Set To Dictionary	${lot_map}			${lot.id}=${lot_data}
-	[Return]	${lot_map}
+	\	Додати лот		${lot}
 
 Додати нецінові показники
 	[Arguments]		${features}
@@ -71,81 +57,36 @@ Resource	alltenders_utils.robot
 	...		features: The features data
 	Run Keyword And Ignore Error  Set Object By Angular  features  ${features}
 
-Додати період уточнень
-	[Arguments]		${enquiryPeriod}
-	[Documentation]
-	...		enquiryPeriod:	The enquiry period data
-	${enquiryStartDate}=	Convert Tender Datetime		${enquiryPeriod}	startDate
-	${enquiryEndDate}=		Convert Tender Datetime		${enquiryPeriod}	endDate
-	Wait and Input Text		${tender.form.enquiry.startDate}	${enquiryStartDate}
-	Wait and Input Text		${tender.form.enquiry.endDate}		${enquiryEndDate}
-		
 Додати предмети
-	[Arguments]		${items}  ${lots_map}
+	[Arguments]		${items}
 	[Documentation]
 	...		items:		The items data
-	...		lots_map:	The map of lots (key = lot_id, value = lot_index)
-	${tender_index}=	Set Variable  ${0}
 	:FOR  ${item}  IN  @{items}
-	\	${status}	${lot_id}=		Run Keyword And Ignore Error  Get From Dictionary  ${item}  relatedLot
-	\	${status}	${lot_data}=	Run Keyword If  '${status}' == 'PASS'  Run Keyword And Ignore Error  Get From Dictionary  ${lots_map}  ${lot_id}
-	\	${lot_data}=				Run Keyword If  '${status}' == 'PASS'  Set Variable  ${lot_data}  ELSE  Create Dictionary  index=${0}  items_count=${tender_index}
-	\	${lot_index}=				Get From Dictionary	${lot_data}  index
-	\	${item_index}=				Get From Dictionary	${lot_data}  items_count
-	\	${next_item}=				Evaluate			${item_index}+1
-	\	Set To Dictionary			${lot_data}			items_count=${next_item}
-	\	${tender_index}=			Set Variable If  '${status}' == 'PASS'  ${tender_index}  ${next_item}
-	\	Додати предмет в лот		${item}  ${lot_index}  ${item_index}
-
+	\	Додати предмет	${item}
+	
 Додати предмет
-	[Arguments]		${item}  ${lot_index}=${0}  ${item_index}=${0}
+	[Arguments]		${item}
 	[Documentation]
-	...		item: The item's data
-	...		lot_index: Index of lot (default 0)
-	...		item_index: Index of item (default 0)
-	${idxs}=				Create List				${lot_index}	${item_index}
-	${description}=			Get From Dictionary		${item}									description
-	${quantity}=			Get From Dictionary		${item}									quantity
-	${cpv}=					Get From Dictionary		${item}									classification
-	${dkpp}=				Get From Dictionary		${item.additionalClassifications[0]}	id								
-	${unit}=				Get From Dictionary		${item}									unit
-	${deliveryLocation}=	Get From Dictionary		${item}									deliveryLocation
-	${deliveryAddress}=		Get From Dictionary		${item}									deliveryAddress
-	${deliveryDate}=		Convert Tender Datetime	${item.deliveryDate}					endDate
-	#	--- fill item header ---
-	Build Xpath and Run Keyword	${idxs}  Wait and Input Text		${tender.form.item.description}		${description}
-	Build Xpath and Run Keyword	${idxs}  Wait and Select In Combo	${tender.form.item.cpv}				${cpv.id}		2
-	Build Xpath and Run Keyword	${idxs}  Wait and Select In Combo	${tender.form.item.dkpp}			${dkpp}			2
-	Build Xpath and Run Keyword	${idxs}  Wait and Input Text		${tender.form.item.quantity}		${quantity}
-	Build Xpath and Run Keyword	${idxs}  Wait and Select In Combo	${tender.form.item.unit}			${unit.code}	2
-	Build Xpath and Run Keyword	${idxs}  Wait and Input Text		${tender.form.item.deliveryEndDate}	${deliveryDate}
-
-	#	--- fill multi-languages attributes by JS ---
-	Run Keyword And Ignore Error  Set Data By Angular  items[${item_index}].description_ru					"${item.description_ru}"
-	Run Keyword And Ignore Error  Set Data By Angular  items[${item_index}].description_en					"${item.description_en}"
-	#	--- fill cpv attributes by JS ---
-	Run Keyword And Ignore Error  Set Data By Angular  items[${item_index}].classification.description		"${cpv.description}"
-	Run Keyword And Ignore Error  Set Data By Angular  items[${item_index}].classification.description_ru	"${cpv.description_ru}"
-	Run Keyword And Ignore Error  Set Data By Angular  items[${item_index}].classification.description_en	"${cpv.description_en}"
-	#	--- fill unit attributes by JS ---
-	Run Keyword And Ignore Error  Set Data By Angular  items[${item_index}].unit.name						"${unit.name}"
-	Run Keyword And Ignore Error  Set Data By Angular  items[${item_index}].unit.name_ru					"${unit.name_ru}"
-	Run Keyword And Ignore Error  Set Data By Angular  items[${item_index}].unit.name_en					"${unit.name_en}"
-	#	--- fill delivery location by JS ---
-	Run Keyword And Ignore Error  Set Object By Angular	items[${item_index}].deliveryLocation				${deliveryLocation}
-	#	--- fill delivery address by JS ---
-	Run Keyword And Ignore Error  Set Object By Angular	items[${item_index}].deliveryAddress				${deliveryAddress}
-
-Додати предмет в лот
-	[Arguments]		${item}  ${lot_index}=${0}  ${item_index}=${0}
-	[Documentation]
-	...		item: The item's data
-	...		lot_index: Index of lot (default 0)
-	...		item_index: Index of item (default 0)
-	${idxs}=		Create List	${lot_index}
+	...		item:		The item's data
+	${status}  ${lot_index}=	Run Keyword And Ignore Error  Знайти індекс лота по ідентифікатору  ${item.relatedLot}
+	${lot_index}=				Set Variable If  '${status}' == 'PASS'  ${lot_index}  ${0}
+	${idxs}=					Create List				${lot_index}
+	${item_index}=				Get Data By Angular		items.length
 	Build Xpath and Run Keyword	${idxs}	Wait and Click Button	${tender.form.lot.addItem}
 	Wait For Progress Bar
-	Додати предмет	${item}  ${lot_index}  ${item_index}
+	#	--- fill item attributes ---
+	Run Keyword And Ignore Error  Set Data By Angular	items[${item_index}].id  							"${item.id}"
+	Run Keyword And Ignore Error  Set Data By Angular	items[${item_index}].relatedLot  					"${item.relatedLot}"
+	Run Keyword And Ignore Error  Set Data By Angular	items[${item_index}].description					"${item.description}"
+	Run Keyword And Ignore Error  Set Data By Angular	items[${item_index}].description_ru					"${item.description_ru}"
+	Run Keyword And Ignore Error  Set Data By Angular	items[${item_index}].description_en					"${item.description_en}"
+	Run Keyword And Ignore Error  Set Object By Angular	items[${item_index}].classification					${item.classification}
+	Run Keyword And Ignore Error  Set Object By Angular	items[${item_index}].additionalClassifications		${item.additionalClassifications}
+	Run Keyword And Ignore Error  Set Data By Angular	items[${item_index}].quantity						${item.quantity}
+	Run Keyword And Ignore Error  Set Object By Angular	items[${item_index}].unit							${item.unit}
+	Run Keyword And Ignore Error  Set Object By Angular	items[${item_index}].deliveryDate					${item.deliveryDate}
+	Run Keyword And Ignore Error  Set Object By Angular	items[${item_index}].deliveryLocation				${item.deliveryLocation}
+	Run Keyword And Ignore Error  Set Object By Angular	items[${item_index}].deliveryAddress				${item.deliveryAddress}
 
 Додати цінову пропозицію
 	[Arguments]		${bid}  ${lot_index}=${0}  ${lots_ids}=${False}
@@ -198,7 +139,6 @@ Resource	alltenders_utils.robot
 	Wait and Click Button	${tender.form.feature.apply}
 	Wait For Progress Bar
 	
-
 Змінити неціновий показник на лот
 	[Arguments]		${feature}  ${lot_id}
 	[Documentation]

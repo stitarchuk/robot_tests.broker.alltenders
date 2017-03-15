@@ -33,11 +33,6 @@ def convert_iso_datetime(isodate, pattern="%d.%m.%Y %H:%M"):
     date_string = iso_dt.strftime(pattern)
     return date_string
 
-def convert_tender_datetime(data, field):
-    if (data and hasattr(data, field)):
-        data = convert_iso_datetime(data[field])
-    return data
-
 def datetime_to_iso(strDate,  pattern="%d.%m.%Y %H:%M"):
     date = datetime.strptime(strDate, pattern)
     return date.isoformat()
@@ -105,4 +100,3 @@ def prepare_data(initial_data):
 
 def ua_date_to_iso(uadate):
     return datetime_to_iso(uadate, "%d.%m.%Y")
-

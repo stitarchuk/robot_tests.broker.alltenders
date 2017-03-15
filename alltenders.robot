@@ -67,11 +67,12 @@ Resource	alltenders_utils.robot
 	...		ELSE  Знайти тендер по ідентифікатору  ${username}  ${tender_uaid}
 
 Отримати інформацію із тендера
-	[Arguments]		${username}  ${field}
+	[Arguments]		${username}  ${tender_uaid}  ${field}
 	[Documentation]
-	...		username:	The name of user
-	...		field:		The name of field
-	Оновити тендер  ${username}  ${TENDER['TENDER_UAID']}
+	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		field:			The name of field
+	Оновити тендер  ${username}  ${tender_uaid}
 	${locator}=  Set Variable If  'questions' in '${field}'		${tender.menu.questions}
 	...							'bids' in '${field}'			${tender.menu.bids}
 	...							${tender.menu.description}
@@ -117,13 +118,9 @@ Resource	alltenders_utils.robot
 	[Documentation]
 	...		username:	The name of user
 	...		tender:		The data dictionary of the tender
-	Log object data			${tender}			created_tender
 	${data}=					Get From Dictionary		${tender}	data
 	${procurementMethodType}=	Set Variable If  '${mode}' == 'single'  belowThreshold  ${data.procurementMethodType}
 	${tenderType}=				Get Variable Value		${tenderTypes['${procurementMethodType}']}	Допорогова закупівля
-	${title}=					Get From Dictionary		${data}			title
-	${description}=				Get From Dictionary		${data}			description
-	${value}=					Get From Dictionary		${data}			value
 	${items}=					Get From Dictionary		${data}			items
 
 	Switch Browser				${username}
@@ -133,64 +130,28 @@ Resource	alltenders_utils.robot
 	Wait and Click Button		${create.tender.create}
 	Sleep						2
 	#	--- fill attributes for all tenders ---
-	Wait and Input Text			${tender.form.header.title}				${title}
-	Run Keyword And Ignore Error  Set Data By Angular  title_ru			"${data.title_ru}"
-	Run Keyword And Ignore Error  Set Data By Angular  title_en			"${data.title_en}"
-	Wait and Input Text			${tender.form.header.description}		${description}
-	Run Keyword And Ignore Error  Set Data By Angular  description_ru	"${data.description_ru}"
-	Run Keyword And Ignore Error  Set Data By Angular  description_en	"${data.description_en}"
-	Wait and Input Text			${tender.form.header.amount}		${value.amount}
-	Wait and Select In Combo	${tender.form.header.currency}		${value.currency}
-	Run Keyword If  '${value.valueAddedTaxIncluded}' == '${True}'  Wait and Click CheckBox	${tender.form.header.taxIncluded}
-	#	--- set minimalStep ---
-	${status}  ${minimalStep}=	Run Keyword And Ignore Error		Get From Dictionary		${data}	minimalStep
-	Run Keyword If  '${status}' == 'PASS'
-	...		Run Keywords
-	...			Wait and Input Text			${tender.form.header.minimalStep}	${minimalStep.amount}
-	...			AND
-	...			Run Keyword And Ignore Error  Set Data By Angular  minimalStep.amount		${minimalStep.amount}
-	...			AND
-	...			Run Keyword And Ignore Error  Set Data By Angular  minimalStep.currency		"${minimalStep.currency}"
-	#	--- set tenderPeriod ---
-	${status}  ${tenderPeriod}=		Run Keyword And Ignore Error	Get From Dictionary		${data}	tenderPeriod
-	${proposalStartDate}=			Convert Tender Datetime	${tenderPeriod}	startDate
-	${proposalEndDate}=				Convert Tender Datetime	${tenderPeriod}	endDate
-	Run Keyword If  '${status}' == 'PASS'
-	...		Run Keywords
-	...			Wait and Input Text			${tender.form.proposal.startDate}	${proposalStartDate}
-	...			AND
-	...			Wait and Input Text			${tender.form.proposal.endDate}		${proposalEndDate}
-	#	--- set enquiryPeriod ---
-	${status}  ${enquiryPeriod}=	Run Keyword And Ignore Error	Get From Dictionary		${data}	enquiryPeriod
-	${enquiryStartDate}=			Convert Tender Datetime	${enquiryPeriod}	startDate
-	${enquiryEndDate}=				Convert Tender Datetime	${enquiryPeriod}	endDate
-	Run Keyword If  '${status}' == 'PASS'
-	...		Run Keywords
-	...			Wait and Input Text			${tender.form.enquiry.startDate}	${enquiryStartDate}
-	...			AND
-	...			Wait and Input Text			${tender.form.enquiry.endDate}		${enquiryEndDate}
-	#	--- fill procuringEntity by JS ---
-	Run Keyword And Ignore Error  Set Object By Angular  procuringEntity		${data.procuringEntity}
-	#	--- fill negotiation cause ---
-	${status}  ${cause}=			Run Keyword And Ignore Error	Get From Dictionary		${data}	cause
-	Run Keyword If  '${status}' == 'PASS'
-	...		Run Keywords
-	...			Run Keyword And Ignore Error  Set Data By Angular  cause			"${cause}"
-	...			AND
-	...			Run Keyword And Ignore Error  Set Data By Angular  causeDescription	"${data.causeDescription}"
-	Sleep    10
+	Run Keyword And Ignore Error  Set Data By Angular	title				"${data.title}"
+	Run Keyword And Ignore Error  Set Data By Angular	title_ru			"${data.title_ru}"
+	Run Keyword And Ignore Error  Set Data By Angular	title_en			"${data.title_en}"
+	Run Keyword And Ignore Error  Set Data By Angular	description			"${data.description}"
+	Run Keyword And Ignore Error  Set Data By Angular	description_ru		"${data.description_ru}"
+	Run Keyword And Ignore Error  Set Data By Angular	description_en		"${data.description_en}"
+	Run Keyword And Ignore Error  Set Object By Angular	value  				${data.value}
+	Run Keyword And Ignore Error  Set Object By Angular	minimalStep  		${data.minimalStep}
+	Run Keyword And Ignore Error  Set Object By Angular	tenderPeriod  		${data.tenderPeriod}
+	Run Keyword And Ignore Error  Set Object By Angular	enquiryPeriod  		${data.enquiryPeriod}
+	Run Keyword And Ignore Error  Set Object By Angular	procuringEntity		${data.procuringEntity}
+	Run Keyword And Ignore Error  Set Data By Angular	cause				"${data.cause}"
+	Run Keyword And Ignore Error  Set Data By Angular	causeDescription	"${data.causeDescription}"
 	#	--- add lots ---
-	${lots_map}=	Run Keyword If  '${mode}' == 'multiLot' or '${procurementMethodType}' == 'aboveThresholdUA' or '${procurementMethodType}' == 'aboveThresholdEU'
-	...				Додати лоти  ${data.lots}
-	...				ELSE  Create Dictionary	
-	#	--- clear default item ---
+	Run Keyword And Ignore Error  Додати лоти				${data.lots}
+	#	--- add items ---
 	Execute Angular Method		items[0].delete
 	Підтвердити дію в діалозі
-	#	--- add items ---
-	Додати предмети   			${items}	${lots_map}
+	Додати предмети   			${items}
 	#	--- fill features ---
-	${status}  ${features}=  Run Keyword And Ignore Error  Get From Dictionary  ${data}  features
-	Run Keyword If  '${status}'=='PASS'  Run Keyword And Ignore Error	Додати нецінові показники	${features}
+	Run Keyword And Ignore Error  Додати нецінові показники	${data.features}
+	Log object data			${tender}			created_tender
 	#	--- save and send to prozorro ---
 	${locator}=		Set Variable If  'negotiation' in '${procurementMethodType}' or '${procurementMethodType}' == 'reporting'	Активний	Період уточнень
 	Save Tender		${locator}  ${True}
@@ -225,9 +186,7 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		item:			The item's data
 	Оновити тендер			${username}  ${tender_uaid}
-	${lot_index}=			Convert To Number		0
-	${item_index}=			Get Data By Angular		items.length
-	Додати предмет в лот	${item}  ${lot_index}  ${item_index}
+	Додати предмет			${item}
 	Save Tender				${tender_uaid}
 	
 Отримати інформацію із предмету
@@ -261,8 +220,8 @@ Resource	alltenders_utils.robot
 	...		item:			The item's data
 	Оновити тендер			${username}  ${tender_uaid}
 	${lot_index}=			Знайти індекс лота по ідентифікатору	${lot_id}
-	${item_index}=			Get Data By Angular						lots[${lot_index}]._items.length
-	Додати предмет в лот	${item}  ${lot_index}  ${item_index}
+	Set To Dictionary  		${item}  relatedLot=${lot_id}
+	Додати предмет			${item}
 	Save Tender				${tender_uaid}
 
 Завантажити документ в лот
@@ -614,8 +573,18 @@ Resource	alltenders_utils.robot
 	...		document:		The path to file that will be uploaded
 	...		[Description] Find tender using uaid and call create_award, add documentation to that award and update his status to active
 	...		[Return] Nothing
-	Fail  Дане ключове слово не реалізовано
-	Оновити тендер	${username}		${tender_uaid}
+	Оновити тендер	${username}			${tender_uaid}
+	${data}=  			Object To Json  	${supplier_data.data}
+	#	--- create award ---
+	Execute Javascript	angular.element('body').scope().$apply(function(scope){scope.context.tender.createAward(${data});});
+	Wait Until Page Contains Element	${award}				${common.wait}
+	Wait and Click Button				${award.create}
+	Sleep   10
+	
+	#	--- upload documentation ---
+	alltenders.Завантажити документ рішення кваліфікаційної комісії	${username}  ${document}  ${tender_uaid}  0
+	alltenders.Підтвердити постачальника							${username}  ${tender_uaid}  0
+	Capture Page Screenshot
 
 Скасувати закупівлю
 	[Arguments]		${username}  ${tender_uaid}  ${cancel_reason}  ${document}  ${new_description}
@@ -692,3 +661,64 @@ Resource	alltenders_utils.robot
 	...		[Return] Nothing
 	Fail  Дане ключове слово не реалізовано
 	Оновити тендер	${username}		${tender_uaid}
+
+##############################################################################
+#             Qualification operations
+##############################################################################
+
+Завантажити документ рішення кваліфікаційної комісії
+	[Arguments]		${username}  ${document}  ${tender_uaid}  ${award_num}
+	[Documentation]
+  	...		username:		The name of user
+	...		document:		The path to file that will be uploaded
+	...		tender_uaid:	The UA ID of the tender
+	...		award_num:		The qualification number
+	...		[Description] Find tender using uaid,  and call upload_qualification_document
+	...		[Return] Reply of API
+	${upload_btn}=		Build Xpath		${tender.form.awards.menu.uploadFile}	${award_num}
+	Оновити тендер	${username}			${tender_uaid}
+	Wait and Click Element				${tender.menu.awards}
+	Upload File							${document}								${upload_btn}
+	#[Return]  ${doc}
+
+Підтвердити постачальника
+	[Arguments]		${username}  ${tender_uaid}  ${award_num}
+	[Documentation]
+  	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		award_num:		The qualification number
+  	...		[Description] Find tender using uaid, create dict with confirmation data and call patch_award
+	...		[Return] Nothing
+	${activate_btn}=	Build Xpath		${tender.form.awards.menu.activate}		${award_num}
+	Оновити тендер	${username}			${tender_uaid}
+	Wait and Click Element				${tender.menu.awards}
+	Wait and Click Button				${activate_btn}
+	Підтвердити дію в діалозі
+
+Дискваліфікувати постачальника
+	[Arguments]		${username}  ${tender_uaid}  ${award_num}
+	[Documentation]
+  	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		award_num:		The qualification number
+  	...		[Description] Find tender using uaid, create data dict with unsuccessful status and call patch_award
+	...		[Return] Reply of API
+	${cancel_btn}=		Build Xpath		${tender.form.awards.menu.cancel}		${award_num}
+	Оновити тендер	${username}			${tender_uaid}
+	Wait and Click Element				${tender.menu.awards}
+	Wait and Click Button				${cancel_btn}
+	Підтвердити дію в діалозі
+	#[Return]  ${reply}
+
+
+Скасування рішення кваліфікаційної комісії
+	[Arguments]		${username}  ${tender_uaid}  ${award_num}
+	[Documentation]
+  	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		award_num:		The qualification number
+  	...		[Description] Find tender using uaid, create data dict with unsuccessful status and call patch_award
+	...		[Return] Reply of API
+	Оновити тендер	${username}		${tender_uaid}
+	Wait and Click Element			${tender.menu.awards}
+	#[Return]  ${reply}

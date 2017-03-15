@@ -15,6 +15,13 @@ ${checkbox.input}							//input[@type="checkbox"]
 #	--- combo-box ---
 ${combobox.filter}							//input[@ng-model="filterText"]
 ${combobox.selector}						//div[@ng-click="selectItem(item);"]//span[contains(text(), "{}")]
+#	--- award window ---
+${award}									xpath=//div[contains(@class, "slide-page-award")]
+${award.header}								${award}//div[contains(@class, "slide-page-header")]
+${award.content}							${award}//div[contains(@class, "slide-page-content")]
+${award.footer}								${award.content}//div[contains(@class, "slide-page-footer")]
+${award.cancel}								${award.footer}//button[@ng-click="model.cancel()"]
+${award.create}								${award.footer}//button[@ng-click="model.create()"]
 #	--- dialog window ---
 ${dialog}									xpath=//div[contains(@class, "ui-dialog-window")]
 ${dialog.header}							${dialog}//div[contains(@class, "ui-dialog-header")]
@@ -22,16 +29,16 @@ ${dialog.content}							${dialog}//div[contains(@class, "ui-dialog-content")]
 ${dialog.body}								${dialog.content}//div[contains(@class, "ui-dialog-body")]
 ${dialog.footer}							${dialog.content}//div[contains(@class, "ui-dialog-footer")]
 ${dialog.apply}								${dialog.footer}//button[@ng-click="actions.apply()"]
-# --- login window ---
+#	--- login window ---
 ${login.window.userName}					${dialog.body}//input[@ng-model="$parent.data.email"]
 ${login.window.password}					${dialog.body}//input[@ng-model="$parent.data.password"]
 ${login.window.apply}						${dialog.footer}//button[@ng-click="actions.apply()"]
-# --- progress bar ---
+#	--- progress bar ---
 ${progress.bar}								xpath=//div[contains(@class, "progress")]
-# --- create tender window ---
+#	--- create tender window ---
 ${create.tender.type}						${dialog.body}//div[@ng-model="data.type"]
 ${create.tender.create}						${dialog.footer}//button[@ng-click="actions.create()"]
-# --- menu ---
+#	--- global menu ---
 ${menu}										xpath=//div[contains(@class, "navigation")]//div[contains(@class, "menu")]
 ${menu.tenders}								${menu}//a[contains(@ng-class, "main.tenders")]
 ${menu.mytenders}							${menu}//a[contains(@ng-class, "main.myTender")]
@@ -42,7 +49,7 @@ ${menu.viewplan}							${menu}//a[contains(@ng-class, "main.viewPlan")]
 ${menu.newTender}							${menu}//div[@ng-click="context.page.newTender();"]
 ${menu.newPlan}								${menu}//div[@ng-click="context.page.newPlan();"]
 ${menu.search}								${menu}//div[@ng-click="context.page.switchAdditionalSearch()"]
-# --- search ---
+#	--- search ---
 ${search.filter}							xpath=//div[contains(@class, "search-grid-filter")]
 ${search.filter.body}						${search.filter}//div[contains(@class, "search-grid-filter-data")]
 ${search.filter.footer}						${search.filter}//div[contains(@class, "search-grid-filter-command")]
@@ -54,8 +61,7 @@ ${search.grid.body}							${search.grid}//div[contains(@class, "search-grid-data
 ${search.grid.row}							${search.grid.body}//div[contains(@class, "search-grid-row-container")]
 ${search.grid.tenderInfo}					${search.grid.row}//div[contains(@class, "search-grid-column-info")]
 ${search.grid.tenderInfo.title}				${search.grid.tenderInfo}//div[contains(@class, "search-grid-column-info-title")]
-# --- tender editor ---
-# --- menu ---
+#	--- tender menu ---
 ${tender.menu.activeAfterQualification}		${menu}//div[contains(@ng-click, "context.tender.activeAfterQualification()")]
 ${tender.menu.addLot}						${menu}//div[contains(@ng-click, "context.tender.addLot()")]
 ${tender.menu.awards}						${menu}//a[contains(@ng-class, "tender.awards")]
@@ -74,7 +80,7 @@ ${tender.menu.save}							${menu}//div[contains(@ng-click, "context.tender.save(
 ${tender.menu.send}							${menu}//div[contains(@ng-click, "context.tender.send()")]
 ${tender.menu.sign}							${menu}//div[contains(@ng-click, "context.tender.sign()")]
 ${tender.menu.verifySign}					${menu}//div[contains(@ng-click, "context.tender.verifySign()")]
-# --- form ---
+#	--- tender form ---
 ${tender.form}								xpath=//div[contains(@class, "document") and @ng-form="form"]
 ${tender.form.addFeature}					${tender.form}//div[@model="context.tender"]//button[@ng-click="model.addFeature()"]
 ${tender.form.right.menu}					${tender.form}//ng-include//div[contains(@class, "right-menu-container")]
@@ -98,7 +104,7 @@ ${tender.form.showFeature}					xpath=(//div[contains(@class, "document") and @ng
 ${tender.form.id}							${tender.form}//div[contains(@class, "document-form-line-value")][2]
 ${tender.form.type}							${tender.form}//div[contains(@class, "document-form-line-value")][1]
 ${tender.form.uaid}							${tender.form}//div[contains(@class, "document-form-line-value")][3]
-# --- features in tender editor ---
+#	--- features in tender editor ---
 ${tender.form.feature}						xpath=//div[contains(@class, "slide-page-feature")]
 ${tender.form.feature.body}					${tender.form.feature}//div[@ng-form="pageFeature"]
 ${tender.form.feature.footer}				${tender.form.feature.body}//div[contains(@class, "slide-page-footer")]
@@ -109,7 +115,15 @@ ${tender.form.feature.description}			${tender.form.feature.body}//textarea[@ng-m
 ${tender.form.feature.title}				${tender.form.feature.body}//input[@ng-model="$parent.model.data.title"]
 ${tender.form.feature.item.title}			${tender.form.feature.body}//input[@name="title_{}"]
 ${tender.form.feature.item.value}			${tender.form.feature.body}//input[@name="value_{}"]
-# --- bid in tender editor ---
+#	--- awards in tender editor ---
+${tender.form.awards}						${tender.form}//div[contains(@class, "awards")]
+${tender.form.awards.body}					(${tender.form.awards}//div[contains(@class, "award") and contains(@ng-repeat, "award")])[{}]
+${tender.form.awards.right.menu}			${tender.form.awards.body}//div[contains(@class, "right-menu-container")]
+${tender.form.awards.menu.activate}			${tender.form.awards.right.menu}//button[@x-for-testing="tender.award.tooltip.activate"]
+${tender.form.awards.menu.cancel}			${tender.form.awards.right.menu}//button[@x-for-testing="tender.award.tooltip.cancel"]
+${tender.form.awards.menu.reject}			${tender.form.awards.right.menu}//button[@x-for-testing="tender.award.tooltip.reject"]
+${tender.form.awards.menu.uploadFile}		${tender.form.awards.right.menu}//button[@x-for-testing="tender.award.tooltip.upload"]
+#	--- bid in tender editor ---
 ${tender.form.bid}							${tender.form}//div[contains(@class, "bid")]
 ${tender.form.bid.body}						${tender.form.bid}//v-block-content
 ${tender.form.bid.right.menu}				${tender.form.bid.body}//div[contains(@class, "right-menu-container")]
@@ -121,12 +135,12 @@ ${tender.form.bid.menu.save}				${tender.form.bid.right.menu}//button[@x-for-tes
 ${tender.form.bid.menu.uploadFile}			${tender.form.bid.right.menu}//button[@x-for-testing="tender.bid.tooltip.upload"]
 ${tender.form.bid.value}					${tender.form.bid.body}//input[@ng-model="$parent.lot.$value"]
 ${tender.form.bid.right.menu.button}		${tender.form.bid.right.menu}//button
-# --- complaint in tender editor ---
+#	--- complaint in tender editor ---
 ${tender.form.complaint}					${tender.form}//div[contains(@class, "complaint")]
 ${tender.form.complaint.body}				//div[@ng-show="model.$behavior.editable"]
 ${tender.form.complaint.right.menu}			//div[contains(@class, "right-menu")]
 ${tender.form.complaint.right.menu.button}	${tender.form.complaint.right.menu}//button
-# --- lot in tender editor ---
+#	--- lot in tender editor ---
 ${tender.form.lot.body}						(${tender.form}//div[contains(@class, "lot") and contains(@ng-repeat, "lot")])[{}]
 ${tender.form.lot.addFeature}				${tender.form.lot.body}//div[@model="context.tender"]//button[@ng-click="model.addFeature()"]
 ${tender.form.lot.addItem}					${tender.form.lot.body}//button[@ng-click="lot.addItems()"]
