@@ -1,5 +1,4 @@
 *** Settings ***
-Library		Selenium2Screenshots
 Library		Selenium2Library
 Library		String
 Library		DateTime
