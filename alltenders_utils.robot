@@ -1,8 +1,4 @@
 *** Settings ***
-#Library		Selenium2Screenshots
-Library		Selenium2Library
-Library		String
-Library		DateTime
 Library		alltenders_service.py
 Resource	alltenders_resource.robot
 
@@ -98,7 +94,7 @@ Get Data By Angular
 	...			}
 	...			return clearAngularData(value);
 	...		});
-	
+
 Log Arguments
 	[Arguments]		@{arguments}
 	[Documentation]
