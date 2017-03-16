@@ -6,8 +6,11 @@ from iso8601 import parse_date
 from json import JSONEncoder
 #from robot.output import LOGGER
 #from robot.output.loggerhelper import Message
+#import op_robot_tests.tests_files.service_keywords as service_keywords
 import munch
-import op_robot_tests.tests_files.service_keywords as service_keywords
+import re
+import os
+import urllib
 
 def build_xpath(path, *idx):
     idx = tuple(int(i) + 1 for i in idx)
@@ -33,15 +36,64 @@ def convert_iso_datetime(isodate, pattern="%d.%m.%Y %H:%M"):
     date_string = iso_dt.strftime(pattern)
     return date_string
 
-def convert_tender_datetime(data, field):
-    if (data and hasattr(data, field)):
-        data = convert_iso_datetime(data[field])
-    return data
-
 def datetime_to_iso(strDate,  pattern="%d.%m.%Y %H:%M"):
     date = datetime.strptime(strDate, pattern)
     return date.isoformat()
-    
+
+def find_document_by_id(data, doc_id):
+    for document in data.get('documents', []):
+        if doc_id in document.get('title', ''):
+            return document
+    for complaint in data.get('complaints', []):
+        for document in complaint.get('documents', []):
+            if doc_id in document.get('title', ''):
+                return document
+    for award in data.get('awards', []):
+        for document in award.get('documents', []):
+            if doc_id in document.get('title', ''):
+                return document
+        for complaint in award.get('complaints', []):
+            for document in complaint.get('documents', []):
+                if doc_id in document.get('title', ''):
+                    return document
+    for cancellation in data.get('cancellations', []):
+        for document in cancellation.get('documents', []):
+            if doc_id in document.get('title', ''):
+                return document
+    for bid in data.get('bids', []):
+        for document in bid.get('documents', []):
+            if doc_id in document.get('title', ''):
+                return document
+    raise Exception('Document with id {} not found'.format(doc_id))
+
+def find_complaint_index_by_complaintID(data, complaintID):
+    if not data:
+        return 0
+    if 'data' in data:
+        data = data['data']
+    if not isinstance(data, (list, tuple)):
+        data = [data]
+    for index, element in enumerate(data):
+        if element['complaintID'] == complaintID:
+            break
+    else:
+        index = -1
+    return index
+
+def find_document_index_by_id(data, doc_id):
+    if not data:
+        return 0
+    if 'data' in data:
+        data = data['data']
+    if not isinstance(data, (list, tuple)):
+        data = [data]
+    for index, document in enumerate(data):
+        if doc_id in document.get('title', ''):
+            break
+    else:
+        index = -1
+    return index
+
 def find_index_by_id(data, object_id):
     if not data:
         return 0
@@ -106,3 +158,8 @@ def prepare_data(initial_data):
 def ua_date_to_iso(uadate):
     return datetime_to_iso(uadate, "%d.%m.%Y")
 
+def download_document_from_url(url, path_to_save_file):
+    f = open(path_to_save_file, 'wb')
+    f.write(urllib.urlopen(url).read())
+    f.close()
+    return os.path.basename(f.name)
