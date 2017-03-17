@@ -6,7 +6,7 @@ from iso8601 import parse_date
 from json import JSONEncoder
 #from robot.output import LOGGER
 #from robot.output.loggerhelper import Message
-#import op_robot_tests.tests_files.service_keywords as service_keywords
+import op_robot_tests.tests_files.service_keywords as service_keywords
 import munch
 import re
 import os
