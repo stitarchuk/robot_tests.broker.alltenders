@@ -40,6 +40,26 @@ def datetime_to_iso(strDate,  pattern="%d.%m.%Y %H:%M"):
     date = datetime.strptime(strDate, pattern)
     return date.isoformat()
 
+def download_document_from_url(url, path_to_save_file):
+    f = open(path_to_save_file, 'wb')
+    f.write(urllib.urlopen(url).read())
+    f.close()
+    return os.path.basename(f.name)
+
+def find_complaint_index_by_complaintID(data, complaintID):
+    if not data:
+        return 0
+    if 'data' in data:
+        data = data['data']
+    if not isinstance(data, (list, tuple)):
+        data = [data]
+    for index, element in enumerate(data):
+        if 'complaintID' in element and element['complaintID'] == complaintID:
+            break
+    else:
+        index = -1
+    return index
+
 def find_document_by_id(data, doc_id):
     for document in data.get('documents', []):
         if doc_id in document.get('title', ''):
@@ -66,20 +86,6 @@ def find_document_by_id(data, doc_id):
                 return document
     raise Exception('Document with id {} not found'.format(doc_id))
 
-def find_complaint_index_by_complaintID(data, complaintID):
-    if not data:
-        return 0
-    if 'data' in data:
-        data = data['data']
-    if not isinstance(data, (list, tuple)):
-        data = [data]
-    for index, element in enumerate(data):
-        if element['complaintID'] == complaintID:
-            break
-    else:
-        index = -1
-    return index
-
 def find_document_index_by_id(data, doc_id):
     if not data:
         return 0
@@ -102,7 +108,9 @@ def find_index_by_id(data, object_id):
     if not isinstance(data, (list, tuple)):
         data = [data]
     for index, element in enumerate(data):
-        if element['id'] == object_id:
+        if 'id' in element and element['id'] == object_id:
+            break
+        if 'complaintID' in element and element['complaintID'] == object_id:
             break
         element_id = service_keywords.get_id_from_object(element)
         if element_id == object_id:
@@ -157,9 +165,3 @@ def prepare_data(initial_data):
 
 def ua_date_to_iso(uadate):
     return datetime_to_iso(uadate, "%d.%m.%Y")
-
-def download_document_from_url(url, path_to_save_file):
-    f = open(path_to_save_file, 'wb')
-    f.write(urllib.urlopen(url).read())
-    f.close()
-    return os.path.basename(f.name)
