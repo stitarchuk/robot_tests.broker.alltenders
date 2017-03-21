@@ -37,9 +37,10 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		field_name:		The name of field to be edit
 	...		field_data:		The name of data to be input
-	Оновити тендер			${username}  ${tender_uaid}
-	Run Keyword And Return  Змінити поле ${field_name}  ${field_data}
+	Оновити тендер	${username}  ${tender_uaid}
+	${reply}=	Run Keyword  Змінити поле ${field_name}  ${field_data}
 	Save Tender
+	[Return]	${reply}
 
 Оновити сторінку з тендером
 	[Arguments]		${username}  ${tender_uaid}
@@ -110,10 +111,9 @@ Resource	alltenders_utils.robot
 	...		username:	The name of user
 	...		tender:		The data dictionary of the tender
 	${data}=					Get From Dictionary		${tender}	data
-	${procurementMethodType}=	Set Variable If  '${mode}' == 'single'  belowThreshold  ${data.procurementMethodType}
+	${procurementMethodType}=	Set Variable If  '${mode}' == 'single' or '${mode}' == 'belowThreshold'  belowThreshold  ${data.procurementMethodType}
 	${tenderType}=				Get Variable Value		${tenderTypes['${procurementMethodType}']}	Допорогова закупівля
 	${items}=					Get From Dictionary		${data}			items
-
 	Switch Browser				${username}
 	#	--- create tender ---
 	Wait and Click Element		${menu.newTender}
@@ -144,10 +144,6 @@ Resource	alltenders_utils.robot
 	Додати предмети   		${items}
 	#	--- fill features ---
 	Run Keyword And Ignore Error  Додати нецінові показники	${data.features}
-	${tender_json}=			Get Data By Angular
-	Log object data			${tender_json}		tender_json		json
-	Log object data			${tender}			created_tender
-	
 	#	--- save and send to prozorro ---
 	${locator}=		Set Variable If  'negotiation' in '${procurementMethodType}' or '${procurementMethodType}' == 'reporting'	Активний	Період уточнень
 	Save Tender		${locator}  ${True}
@@ -156,7 +152,7 @@ Resource	alltenders_utils.robot
 	${id}=    				Get Data By Angular		id
 	Log						${tender_uaid}
 	Set To Dictionary		${data}				id=${id}	tenderID=${tender_uaid}
-	Log object data			${tender}			created_tender
+	Log Object Data			${tender}			created_tender
 	[Return]	${tender_uaid}
 
 ##############################################################################
@@ -257,8 +253,9 @@ Resource	alltenders_utils.robot
 	...		field:			The name of field
 	...		value:			The value to be set
 	Оновити тендер	${username}  ${tender_uaid}
-	${index}=		Знайти індекс лота по ідентифікатору	${lot_id}
-	Set Data By Angular	lots[${index}].${field}				${value}
+	${index}=	Знайти індекс лота по ідентифікатору	${lot_id}
+	${value}=	Set Variable If  ${field.endswith('valueAddedTaxIncluded')} or ${field.endswith('amount')} or ${field.endswith('quantity')}  ${value}  "${value}"
+	Set Data By Angular  lots[${index}].${field}  ${value}
 	Save Tender
 
 Отримати інформацію із лоту
@@ -273,7 +270,7 @@ Resource	alltenders_utils.robot
 	${value}=		Get Data By Angular  lots[${index}].${field}
 	Should Not Be Equal  ${value}  ${None}
 	${value}=	Run Keyword If  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
-	...			ELSE IF  ${field.endswith('amount')}  Convert To Number  ${value} 
+	...			ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')}  Convert To Number  ${value} 
 	...			ELSE	Set Variable  ${value}
 	[Return]	${value}
 	
@@ -360,6 +357,7 @@ Resource	alltenders_utils.robot
 	Should Not Be Equal  ${value}  ${None}
 	${value}=	Run Keyword If  ${field.endswith('value')}  Convert To Number  ${value} 
 	...			ELSE  Set Variable  ${value}
+#	...			ELSE  Convert To String  ${value}
 	[Return]	${value}
 
 ##############################################################################
@@ -427,9 +425,10 @@ Resource	alltenders_utils.robot
 	...		field:			The name of field
 	Оновити тендер	${username}  ${tender_uaid}
 	Wait and Click Link	${tender.menu.questions}
-	${index}=		Знайти індекс запитання по ідентифікатору  ${question_id}
-	${value}=		Get Data By Angular  questions[${index}].${field}
+	${index}=	Знайти індекс запитання по ідентифікатору  ${question_id}
+	${value}=	Get Data By Angular  questions[${index}].${field}
 	Should Not Be Equal  ${value}  ${None}
+#	${value}=	Convert To String  ${value}
 	[Return]	${value}
 	
 ##############################################################################
@@ -443,7 +442,7 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		complaint_id:	The ID of the complaint
 	...		answer_data: 	The data of answer
-	alltenders.Відповісти на вимогу про виправлення умов закупівлі  ${username}  ${tender_uaid}  ${complaint_id}  ${answer_data}
+	alltenders.Відповісти на вимогу про виправлення умов лоту  ${username}  ${tender_uaid}  ${complaint_id}  ${answer_data}
 
 Відповісти на вимогу про виправлення умов лоту
 	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${answer_data}
@@ -452,56 +451,27 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		complaint_id:	The ID of the complaint
 	...		answer_data: 	The data of answer
-	Оновити тендер	${username}  ${tender_uaid}
-	${index}=		Знайти індекс скарги по ідентифікатору  ${complaint_id}
-	Run Keyword And Ignore Error  Set Data By Angular	complaints[${index}].resolution  				"${answer_data.data.resolution}"
-	Run Keyword And Ignore Error  Set Data By Angular	complaints[${index}].resolutionType  			"${answer_data.data.resolutionType}"
-	Run Keyword And Ignore Error  Set Data By Angular	complaints[${index}].status  					"${answer_data.data.status}"
-	Run Keyword And Ignore Error  Set Data By Angular	complaints[${index}].tendererAction  			"${answer_data.data.tendererAction}"
-	Save Tender
-	Fail  Дане ключове слово не реалізовано
+	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
+	${info}=	Create Dictionary	
+	Execute Angular Method  complaints[${index}].answer
+	Run Keyword And Ignore Error  Execute Javascript
+	...		var model = angular.element('div[ng-form=pageComplaintAnswer]').scope().model;
+	...		model.data.info = {
+	...			description: "${answer_data.data.resolution}",
+	...			type: "${answer_data.data.resolutionType}"
+	...		};
+	...		model.apply();
+	Wait For Progress Bar
 
-
-Створити вимогу
-	[Arguments]		${username}  ${tender_uaid}  ${complaint}
+Завантажити документацію до вимоги
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${document}
 	[Documentation]
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
-	...		complaint:		The complaint that must be created
-	${title}=				Get From Dictionary		${complaint.data}	title
-	${description}=			Get From Dictionary		${complaint.data}	description
-	Оновити тендер						${username}  ${tender_uaid}
-	Wait and Click Button				${tender.form.menu.complaint}
-	Wait Until Page Contains Element	${tender.complaint.form}				${common.wait}
-	Wait and Input Text					${tender.complaint.form.title}			${title}
-	Wait and Input Text					${tender.complaint.form.description}	${description}
-#	Додати контакт						${tender.complaint.form.contact}		${contactPoint}
-	Capture Page Screenshot
-	Wait and Click Button				${tender.complaint.form.make}
-	Wait and Click Link					${tender.menu.complaints}
-	Wait Until Page Contains Element	${tender.form.complaint}				${common.wait}
-	Capture Page Screenshot
-	${complaint_index}=					Get Data By Angular				complaints.length
-	${complaint_index}=					Evaluate	${complaint_index}-${1}
-	${resp}=							Munchify Data By Angular		complaints[${complaint_index}]
-	Set To Dictionary					${resp}							index=${complaint_index}
-	[Return]	${resp}
-
-Завантажити документацію до вимоги old
-	[Arguments]		${username}  ${tender_uaid}  ${complaint}  ${filepath}
-	[Documentation]
-	...		username:		The name of user
-	...		tender_uaid:	The UA ID of the tender
-	...		complaint: 		The data of complaint
-	...		filepath:		The path to file that will be uploaded
-	${complaint_index}=					Get From Dictionary			${complaint}	index
-	${complaint_form}=					Evaluate					${complaint_index}+1
-	${complaint_form}=					Build Xpath For Parent		${tender.form.complaint}	${complaint_form}
-	Оновити тендер						${username}  				${tender_uaid}
-	Wait and Click Link					${tender.menu.complaints}
-	Wait Until Page Contains Element	${complaint_form}			${common.wait}
-	Upload File							${filepath}					${complaint_form}${tender.form.complaint.right.menu.button}	2
-	Run Keyword And Return				Munchify Data By Angular	complaints[complaint_index].documents
+	...		complaint_id: 	The ID of complaint
+	...		document:		The document that will be uploaded
+	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
+	Upload File By Angular  ${document}  complaints[${index}].upload
 
 Отримати документ до скарги
 	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${doc_id}  ${award_id}=${None}
@@ -532,11 +502,155 @@ Resource	alltenders_utils.robot
 	...		complaint_id:	The ID of the complaint
 	...		field:			The name of field
 	...		award_id:		The ID of the award
-	Оновити тендер	${username}  ${tender_uaid}
-	${index}=		Знайти індекс скарги по ідентифікатору  ${complaint_id}
-	${value}=		Get Data By Angular  complaints[${index}].${field}
+	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
+	${value}=	Get Data By Angular  complaints[${index}].${field}
 	Should Not Be Equal  ${value}  ${None}
+#	${value}=	Convert To String  ${value}
 	[Return]	${value}
+
+Перетворити вимогу про виправлення умов закупівлі в скаргу
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${escalating_data}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		complaint_id:		The ID of the complaint
+	...		escalating_data:	The escalating data 
+	...		[Description]  Переводить вимогу у статус "pending"
+	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
+	Execute Angular Method  complaints[${index}].pending
+	Wait For Progress Bar
+
+Перетворити вимогу про виправлення умов лоту в скаргу
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${escalating_data}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		complaint_id:		The ID of the complaint
+	...		escalating_data:	The escalating data 
+	...		[Description]  Переводить вимогу у статус "pending"
+	alltenders.Перетворити вимогу про виправлення умов закупівлі в скаргу  ${username}  ${tender_uaid}  ${complaint_id}  ${escalating_data}
+	
+Подати вимогу
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${confirmation_data}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		complaint_id:		The ID of the complaint
+	...		confirmation_data:	The confirmation data 
+	...		[Description]  Переводить вимогу зі статусу "draft" у статус "claim"
+	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
+	Execute Angular Method  complaints[${index}].claim
+	Wait For Progress Bar
+
+Підтвердити вирішення вимоги про виправлення умов закупівлі
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${confirmation_data}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		complaint_id:		The ID of the complaint
+	...		confirmation_data:	The confirmation data 
+	...		[Description]  Переводить вимогу зі статусу "answered" у статус "resolved"
+	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
+	Execute Angular Method  complaints[${index}].resolve
+	Wait For Progress Bar
+
+Підтвердити вирішення вимоги про виправлення умов лоту
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${confirmation_data}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		complaint_id:		The ID of the complaint
+	...		confirmation_data:	The confirmation data 
+	...		[Description]  Переводить вимогу зі статусу "answered" у статус "resolved"
+	alltenders.Підтвердити вирішення вимоги про виправлення умов закупівлі  ${username}  ${tender_uaid}  ${complaint_id}  ${confirmation_data}
+
+Скасувати вимогу про виправлення умов закупівлі
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${cancellation_data}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		complaint_id:		The ID of the complaint
+	...		cancellation_data:	The cancelation data 
+	...		[Description]  Переводить вимогу в статус "canceled"
+	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
+	Execute Angular Method  complaints[${index}].cancel
+	Run Keyword And Ignore Error  Execute Javascript
+	...		var scope = angular.element('div[class="ui-dialog-content"]').scope();
+	...		scope.data.data.input = "${cancellation_data.data.cancellationReason}";
+	...		scope.actions.apply();
+	Wait For Progress Bar
+
+Скасувати вимогу про виправлення умов лоту
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${cancellation_data}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		complaint_id:		The ID of the complaint
+	...		cancellation_data:	The cancelation data 
+	...		[Description]  Переводить вимогу в статус "canceled"
+	alltenders.Скасувати вимогу про виправлення умов закупівлі  ${username}  ${tender_uaid}  ${complaint_id}  ${cancellation_data}
+
+Створити вимогу про виправлення умов закупівлі
+	[Arguments]		${username}  ${tender_uaid}  ${claim}  ${document}=${None}
+	[Documentation]
+	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		claim:			The complaint that must be created
+	...		document:		The the document that will be uploaded
+	...		[Description]  Створює вимогу у статусі "claim". Можна створити вимогу як з документацією, так і без неї.
+	...		[Return]  The complaintID
+	${complaintID}=	alltenders.Створити чернетку вимоги про виправлення умов закупівлі  ${username}  ${tender_uaid}  ${claim}
+	${status}=		Run Keyword And Return Status  Should Not Be Equal  ${document}  ${None}
+	Run keyword If  ${status} == ${True}
+	...				alltenders.Завантажити документацію до вимоги  ${username}  ${tender_uaid}  ${complaintID}  ${document}
+	alltenders.Подати вимогу  ${username}  ${tender_uaid}  ${complaintID}  ${None}
+	[Return]	${complaintID}
+  
+Створити вимогу про виправлення умов лоту
+	[Arguments]		${username}  ${tender_uaid}  ${claim}  ${lot_id}  ${document}=${None}
+	[Documentation]
+	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		claim:			The complaint that must be created
+	...		lot_id:			The ID of the lot
+	...		document:		The the document that will be uploaded
+	...		[Description]  Створює вимогу у статусі "claim". Можна створити вимогу як з документацією, так і без неї.
+	...		Якщо lot_index == None, то створюється вимога про виправлення умов тендера.
+	...		[Return]  The complaintID
+	${complaintID}=	alltenders.Створити чернетку вимоги про виправлення умов лоту  ${username}  ${tender_uaid}  ${claim}  ${lot_id}
+	${status}=		Run Keyword And Return Status  Should Not Be Equal  ${document}  ${None}
+	Run keyword If  ${status} == ${True}
+	...				alltenders.Завантажити документацію до вимоги  ${username}  ${tender_uaid}  ${complaintID}  ${document}
+	alltenders.Подати вимогу  ${username}  ${tender_uaid}  ${complaintID}  ${None}
+	[Return]	${complaintID}
+
+Створити чернетку вимоги про виправлення умов закупівлі
+	[Arguments]		${username}  ${tender_uaid}  ${claim}
+	[Documentation]
+	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		claim:			The complaint that must be created
+	...		[Description]  Створює вимогу у статусі "draft".
+	...		[Return]  The complaintID
+	Оновити тендер	${username}  ${tender_uaid}
+	Execute Angular Method  complaint
+	Run Keyword And Return  Створити вимогу  ${claim}
+
+Створити чернетку вимоги про виправлення умов лоту
+	[Arguments]		${username}  ${tender_uaid}  ${claim}  ${lot_id}
+	[Documentation]
+	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		claim:			The complaint that must be created
+	...		lot_id:			The ID of the lot
+	...		[Description]  Створює вимогу у статусі "draft".
+	...		Якщо lot_index == None, то створюється вимога про виправлення умов тендера.
+	...		[Return]  The complaintID
+	Run Keyword And Return If  '${lot_id}' == '${None}'  alltenders.Створити чернетку вимоги про виправлення умов закупівлі  ${username}  ${tender_uaid}  ${claim}
+	Оновити тендер	${username}  ${tender_uaid}
+	${index}=		Знайти індекс лота по ідентифікатору	${lot_id}
+	Execute Angular Method  lots[${lot_index}].complaint
+	Run Keyword And Return  Створити вимогу  ${claim}
 
 ##############################################################################
 #             Bid operations
@@ -581,16 +695,6 @@ Resource	alltenders_utils.robot
 	Execute Angular Method	activate  bids
 	Підтвердити дію в діалозі
 	Capture Page Screenshot
-	
-		
-#	${value}=	Convert To Number	${value}	2
-#	Wait and Click Link					${tender.menu.bids}
-#	Wait Until Page Contains Element	${tender.form.bid}					${common.wait}
-#	Wait and Input Text					${tender.form.bid.value}			${value}
-#	Wait and Click Button				${tender.form.bid.menu.save}
-#	Wait and Click Button				${tender.form.bid.menu.activate}
-#	Підтвердити дію в діалозі
-#	Capture Page Screenshot
 
 Отримати інформацію із пропозиції
 	[Arguments]		${username}  ${tender_uaid}  ${field}
@@ -686,7 +790,6 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	Оновити тендер	${username}		${tender_uaid}
 	Upload File		${filepath}		${tender.form.menu.uploadFile}
-#	[Return]   ${reply}
 	
 Отримати документ
 	[Arguments]		${username}  ${tender_uaid}  ${doc_id}
@@ -721,6 +824,7 @@ Resource	alltenders_utils.robot
 	${document}=	Знайти документ по ідентифікатору	${doc_id}
 	${value}=		Get From Dictionary		${document}	${field}
 	Should Not Be Equal  ${value}  ${None}
+#	${value}=		Convert To String  ${value}
 	[Return]	${value}
 
 ##############################################################################
@@ -899,3 +1003,72 @@ Resource	alltenders_utils.robot
 	...		cancel_id:		The ID of the cancellation
 	...		doc_id:			The ID of the document
 	Run Keyword And Return  alltenders.Отримати документ  ${username}  ${tender_uaid}  ${doc_id}
+
+##############################################################################
+#             OpenUA procedure
+##############################################################################
+
+Підтвердити кваліфікацію
+	[Arguments]		${username}  ${tender_uaid}  ${qualification_num}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		qualification_num:	The number of the qualification
+	...		[Description] Find tender using uaid, create data dict with active status and call patch_qualification
+	...		[Return] Reply of API
+	Оновити тендер	${username}		${tender_uaid}
+	${index}=	Get Qualification Index  ${qualification_num}
+	Execute Angular Method  qualifications[${index}].activate
+	Підтвердити дію в діалозі
+
+Відхилити кваліфікацію
+	[Arguments]		${username}  ${tender_uaid}  ${qualification_num}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		qualification_num:	The number of the qualification
+	...		[Description] Find tender using uaid, create data dict with unsuccessful status and call patch_qualification
+	...		[Return] Reply of API
+	Оновити тендер	${username}		${tender_uaid}
+	${index}=	Get Qualification Index  ${qualification_num}
+	Execute Angular Method  qualifications[${index}].reject
+	Підтвердити дію в діалозі
+
+Завантажити документ у кваліфікацію
+	[Arguments]		${username}  ${document}  ${tender_uaid}  ${qualification_num}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		document:			The document to be upload
+	...		qualification_num:	The number of the qualification
+	...		[Description] Find tender using uaid,  and call upload_qualification_document
+	...		[Return] Reply of API
+	Оновити тендер	${username}		${tender_uaid}
+	${index}=	Get Qualification Index  ${qualification_num}
+	Upload File By Angular	${document}  qualifications[${index}].upload
+
+Скасувати кваліфікацію
+	[Arguments]		${username}  ${tender_uaid}  ${qualification_num}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		qualification_num:	The number of the qualification
+	...		[Description] Find tender using uaid, create data dict with cancelled status and call patch_qualification
+	...		[Return] Reply of API
+	Оновити тендер	${username}		${tender_uaid}
+	${index}=	Get Qualification Index  ${qualification_num}
+	Execute Angular Method  qualifications[${index}].cancel
+	Capture Page Screenshot
+	Підтвердити дію в діалозі
+	Capture Page Screenshot
+
+Затвердити остаточне рішення кваліфікації
+	[Arguments]		${username}  ${tender_uaid}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		[Description] Find tender using uaid and call patch_tender
+	...		[Return] Reply of API
+	Оновити тендер	${username}		${tender_uaid}
+	Wait and Click Element			${tender.menu.activeAfterQualification}
+	Підтвердити дію в діалозі
