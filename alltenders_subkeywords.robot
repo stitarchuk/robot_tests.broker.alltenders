@@ -29,7 +29,6 @@ Resource	alltenders_utils.robot
 	#	--- check for dialog ---
 	${status}=	Run Keyword And Return Status  Page Should Contain Element  ${dialog}
 	Run Keyword If  ${status}  Підтвердити дію в діалозі  ELSE  Wait For Progress Bar
-	#	--- get data by Angular
 	${lot_index}=				Get Data By Angular		lots.length
 	${lot_index}=				Evaluate				${lot_index}-${1}
 	#	--- fill lot attributes ---
@@ -42,6 +41,7 @@ Resource	alltenders_utils.robot
 	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].description_en		"${lot.description_en}"
 	Run Keyword And Ignore Error  Set Object By Angular	lots[${lot_index}].value  				${lot.value}
 	Run Keyword And Ignore Error  Set Object By Angular	lots[${lot_index}].minimalStep  		${lot.minimalStep}
+	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].minimalStep.amount	${lot.minimalStep.amount}
 	[Return]	${lot_index}
 	
 Додати лоти
@@ -57,6 +57,31 @@ Resource	alltenders_utils.robot
 	...		features: The features data
 	Run Keyword And Ignore Error  Set Object By Angular  features  ${features}
 
+Додати неціновий показник
+	[Arguments]		${feature}
+	[Documentation]
+	...		feature:		The feature data
+	${feature}=  Object To Json  ${feature}
+	Execute Javascript
+	...		return angular.element('body').scope().$apply(function(scope) {
+	...			var tender = scope.context.tender;
+	...			return tender.features = (tender.features||[]).concat(${feature});
+	...		});
+	
+#	Wait Until Page Contains Element  ${tender.form.feature}  ${common.wait}
+#	${feature_index}=	Get Data By Angular		features.length
+#	${feature_index}=	Evaluate				${feature_index}-${1}
+#	Run Keyword And Ignore Error  Set Data By Angular	features[${feature_index}].code  			"${feature.code}"
+#	Run Keyword And Ignore Error  Set Data By Angular	features[${feature_index}].title  			"${feature.title}"
+#	Run Keyword And Ignore Error  Set Data By Angular	features[${feature_index}].title_en			"${feature.title_en}"
+#	Run Keyword And Ignore Error  Set Data By Angular	features[${feature_index}].title_ru			"${feature.title_ru}"
+#	Run Keyword And Ignore Error  Set Data By Angular	features[${feature_index}].description  	"${feature.description}"
+#	Run Keyword And Ignore Error  Set Data By Angular	features[${feature_index}].featureOf  		"${feature.featureOf}"
+#	Run Keyword And Ignore Error  Set Data By Angular	features[${feature_index}].relatedItem  	"${feature.relatedItem}"
+#	Run Keyword And Ignore Error  Set Object By Angular	features[${feature_index}].enum				${feature.enum}
+#	Wait and Click Button	${tender.form.feature.apply}
+#	Wait For Progress Bar
+	
 Додати предмети
 	[Arguments]		${items}
 	[Documentation]
@@ -99,7 +124,6 @@ Resource	alltenders_utils.robot
 	Build Xpath and Run Keyword	${idxs}  Wait and Click Button		${tender.form.lot.menu.bid}
 	Run Keyword If  ${lots_ids}		Set Bids	${bid.data.lotValues}	${lots_ids}
 	...		ELSE	Set Bid  ${bid.data.value}  ${idxs}
-#	Додати контакт						${tender.contact.form.select}
 	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch1"]
 	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch2"]
 	Wait and Click Button				${tender.contact.form.make}
@@ -107,72 +131,36 @@ Resource	alltenders_utils.robot
 	Wait and Click Link					${tender.menu.bids}
 	Wait Until Page Contains Element	${tender.form.bid}					${common.wait}
 
-Змінити неціновий показник
-	[Arguments]		${feature}  ${enums_length}=${2}
-	[Documentation]
-	...		feature:		The feature data
-	...		enums_length:	The length of feature's enums
-	Wait Until Page Contains Element	${tender.form.feature}				${common.wait}
-	#	--- fill feature ---
-	${title}=		Decode Bytes String	${feature.title}
-	${description}=	Decode Bytes String	${feature.description}
-	Wait and Input Text		${tender.form.feature.title}		${title}
-	Wait and Input Text		${tender.form.feature.description}	${description}
-	#	--- fill enums ---
-	${enums}=		Get From Dictionary	${feature}				enum
-	${item_title}=	Convert To String 	${tender.form.feature.item.title}
-	${item_value}=	Convert To String 	${tender.form.feature.item.value}
-	${index}=		Set Variable		${1}
-	:FOR  ${enum}  IN  @{enums}
-	\	${value}=	Convert To Number	${enum.value}	2
-	\	${title}=	Decode Bytes String	${enum.title}
-	\	Run Keyword If  ${value} == 0
-	\	...		Run Keywords
-	\	...			Wait and Input Text  ${item_title.format(0)}  ${title}
-	\	...			AND
-	\	...			Continue For Loop
-	\	Run Keyword If  ${index} >= ${enums_length}	Click Button  ${tender.form.feature.add}
-	\	Wait and Input Text  ${item_title.format(${index})}	${title}
-	\	Wait and Input Text  ${item_value.format(${index})}	${value}
-	\	${index}=	Set Variable		${index + 1}
-	Capture Page Screenshot
-	Wait and Click Button	${tender.form.feature.apply}
-	Wait For Progress Bar
-	
 Змінити неціновий показник на лот
 	[Arguments]		${feature}  ${lot_id}
 	[Documentation]
 	...		feature:	The feature data
 	...		lot_id:		The ID of the lot
-	${length}=		Set Variable							${2}
-	${lot_index}=	Знайти індекс лота по ідентифікатору	${lot_id}
-	${idxs}=		Create List								${lot_index}
-	${lot_id}=		Get Data By Angular						lots[${lot_index}].id
-	${features}=	Get Data By Angular						features
-	:FOR  ${index}  ${cur_feature}  IN ENUMERATE  @{features}
-	\	${featureOf}=	Get From Dictionary  ${cur_feature}	featureOf
-	\	${relatedItem}=	Get From Dictionary  ${cur_feature}	relatedItem
-	\	Continue For Loop If  '${featureOf}' != 'lot' or '${relatedItem}' != '${lot_id}'
-	\	${length}=		Get Data By Angular  features[${index}].enum.length
-	\	Exit For Loop
-	Build Xpath and Run Keyword	${idxs}  Wait and Click Button		${tender.form.lot.addFeature}
-	Змінити неціновий показник	${feature}	${length}
-	Build Xpath and Run Keyword	${idxs}  Wait and Click CheckBox	${tender.form.lot.showFeature}
+	${index}=	Знайти індекс лота по ідентифікатору  ${lot_id}
+	${lot_id}=	Get Data By Angular  lots[${index}].id
+	Set To Dictionary  ${feature}  relatedItem=${lot_id}
+	Додати неціновий показник	${feature}
+	Save Tender
 
 Змінити неціновий показник на предмет
 	[Arguments]		${feature}  ${item_id}
 	[Documentation]
 	...		feature:	The feature data
 	...		item_id:	The ID of the item
-	Fail  Функція поки не реалізовано в сценарії автоматичного тестування
-
+	${index}=		Знайти індекс предмета по ідентифікатору  ${item_id}
+	${item_id}=		Get Data By Angular  items[${index}].id
+	Set To Dictionary  ${feature}  relatedItem=${item_id}
+	Додати неціновий показник	${feature}
+	Save Tender
+	
 Змінити неціновий показник на тендер
 	[Arguments]		${feature}
 	[Documentation]
 	...		feature:		The feature data
 	Wait and Click Button		${tender.form.addFeature}
-	Змінити неціновий показник	${feature}
+	Додати неціновий показник	${feature}
 	Wait and Click CheckBox		${tender.form.showFeature}
+	Save Tender
 
 Змінити поле features
 	[Arguments]		${features}
@@ -200,12 +188,20 @@ Resource	alltenders_utils.robot
 	[Documentation]	Change the final date for submission of proposals
 	Wait and Input Text		${tender.form.proposal.endDate}		${endDate}
 
+Знайти документ по ідентифікатору
+	[Arguments]		${doc_id}
+	[Documentation]
+	...		doc_id:			The document's ID 
+	${tender}=		Get Data By Angular
+	${document}=	Find Document By Id		${tender}  ${doc_id}
+	[Return]	${document}
+	
 Знайти індекс документа по ідентифікатору
 	[Arguments]		${doc_id}
 	[Documentation]
 	...		doc_id:			The document's ID 
-	${documents}=	Get Data By Angular		documents
-	${index}=		Find Index By Id		${documents}	${doc_id}
+	${data}=	Get Data By Angular			documents
+	${index}=	Find Document Index By Id	${data}		${doc_id}
 	Run Keyword If	${index} < 0	Fail	Документ id=${doc_id} не знайдено
 	[Return]	${index}
 
@@ -213,8 +209,8 @@ Resource	alltenders_utils.robot
 	[Arguments]		${question_id}
 	[Documentation]
 	...		question_id:	The question's ID 
-	${questions}=	Get Data By Angular		questions
-	${index}=		Find Index By Id		${questions}	${question_id}
+	${data}=	Get Data By Angular		questions
+	${index}=	Find Index By Id		${data}		${question_id}
 	Run Keyword If	${index} < 0	Fail	Запитання id=${question_id} не знайдено
 	[Return]	${index}
 
@@ -222,47 +218,38 @@ Resource	alltenders_utils.robot
 	[Arguments]		${lot_id}
 	[Documentation]
 	...		lot_id:			The ID of the lot
-	${lots}=		Get Data By Angular		lots
-	${index}=		Find Index By Id		${lots}		${lot_id}
+	${data}=	Get Data By Angular		lots
+	${index}=	Find Index By Id		${data}		${lot_id}
 	Run Keyword If	${index} < 0	Fail	Лот id=${lot_id} не знайдено
+	[Return]	${index}
+	
+Знайти індекс нецінового показника по ідентифікатору
+	[Arguments]		${feature_id}
+	[Documentation]
+	...		feature_id:		The ID of the feature
+	${data}=	Get Data By Angular		features
+	${index}=	Find Index By Id		${data}		${feature_id}
+	Run Keyword If	${index} < 0	Fail	Неціновий показник id=${feature_id} не знайдено
 	[Return]	${index}
 
 Знайти індекс предмета по ідентифікатору
 	[Arguments]		${item_id}
 	[Documentation]
 	...		item_id:		The ID of item
-	${items}=		Get Data By Angular		items
-	${index}=		Find Index By Id		${items}	${item_id}
+	${data}=	Get Data By Angular		items
+	${index}=	Find Index By Id		${data}		${item_id}
 	Run Keyword If	${index} < 0	Fail	Предмет закупівлі id=${item_id} не знайдено
 	[Return]	${index}
 
-Знайти запитання по ідентифікатору
-	[Arguments]		${question_id}
+Знайти індекс скарги по ідентифікатору
+	[Arguments]		${complaint_id}
 	[Documentation]
-	...		question_id:	The question's ID 
-	${questions}=	Get Data By Angular		questions
-	${index}=		Find Index By Id		${questions}	${question_id}
-	Run Keyword If	${index} < 0	Fail	Запитання id=${question_id} не знайдено
-	[Return]	${questions[${index}]}	
+	...		complaint_id:	The ID of the complaint
+	${data}=	Get Data By Angular		complaints
+	${index}=	Find Index By Id		${data}		${complaint_id}
+	Run Keyword If	${index} < 0	Fail	Скаргу id=${complaint_id} не знайдено
+	[Return]	${index}
 
-Знайти лот по ідентифікатору
-	[Arguments]		${lot_id}
-	[Documentation]
-	...		lot_id:			The ID of the lot
-	${lots}=		Get Data By Angular		lots
-	${index}=		Find Index By Id		${lots}	${lot_id}
-	Run Keyword If	${index} < 0	Fail	Лот id=${lot_id} не знайдено
-	[Return]	${lots[${index}]}	
-
-Знайти предмет по ідентифікатору
-	[Arguments]		${item_id}
-	[Documentation]
-	...		item_id:		The ID of item
-	${items}=		Get Data By Angular		items
-	${index}=		Find Index By Id		${items}	${item_id}
-	Run Keyword If	${index} < 0	Fail	Предмет закупівлі id=${item_id} не знайдено
-	[Return]	${items[${index}]}	
-	
 #	--- short keyword for alltenders.Пошук тендера по ідентифікатору ---
 Знайти тендер по ідентифікатору
 	[Arguments]		${username}  ${tender_uaid}
