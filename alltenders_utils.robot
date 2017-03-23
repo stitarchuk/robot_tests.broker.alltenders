@@ -48,12 +48,30 @@ Build Xpath and Run Keyword
 	Set List Value  ${kw_args}  	0  			${locator}
 	Run Keyword And Return  ${keyword}  @{kw_args}
 
+Click Element If Responsive
+	[Arguments]		${locator}
+	[Documentation]
+	...		locator: What are we waiting for and where to click
+	${status}=  				Element is Responsive	${locator}
+	Run Keyword If  ${status}	Click Element			${locator}
+
 Decode Bytes String
 	[Arguments]		${string}
 	[Documentation]	Decodes the given bytes string to a Unicode string.
 	...		string: the string
 	${bytes}=  Convert To Bytes  ${string}
 	Run Keyword And Return  Decode Bytes To String  ${bytes}  UTF-8
+
+Element is Responsive
+	[Arguments]		${locator}
+	[Documentation]
+	...		locator: What are we waiting for and where to click
+	${status}=  Run Keyword And Return Status	Page Should Contain Element		${locator}
+	${status}=  Run Keyword If  ${status}
+	...			Run Keyword And Return Status	Element Should Be Visible		${locator}
+	${status}=  Run Keyword If  ${status}
+	...			Run Keyword And Return Status	Element Should Be Enabled		${locator}
+	[Return]	${status}
 
 Execute Angular Method
 	[Arguments]		${method_path}  ${object_path}=tender
@@ -188,7 +206,22 @@ Upload File
 	Wait and Click Button						${btn_upload}
 	Wait Until Page Contains Element			${upload_locator}				${common.wait}
 	Choose File									${upload_locator}				${filepath}
-	Wait and Click Button						${tender.uploadFile.form.save}	60
+	Wait and Click Button						${tender.uploadFile.form.save}
+	Capture Page Screenshot
+	Wait Until Page Does Not Contain Element	${tender.uploadFile.form}		${common.wait}
+	Wait For Progress Bar
+
+Upload File By Angular
+	[Arguments]		${filepath}  ${method_path}  ${object_path}=tender  ${upload_locator}=${tender.uploadFile}
+	[Documentation]
+	...		filepath:		The path to file that will be uploaded
+	...		method_path:	The path to the method to be executed (from ${object_path})
+	...		object_path:	The path to the object (from sope.context)
+	...		upload_locator:	The locator for file upload <input> element
+	Execute Angular Method						${method_path}					${object_path}
+	Wait Until Page Contains Element			${upload_locator}				${common.wait}
+	Choose File									${upload_locator}				${filepath}
+	Wait and Click Button						${tender.uploadFile.form.save}
 	Capture Page Screenshot
 	Wait Until Page Does Not Contain Element	${tender.uploadFile.form}		${common.wait}
 	Wait For Progress Bar

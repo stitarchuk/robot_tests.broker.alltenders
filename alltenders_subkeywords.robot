@@ -67,21 +67,7 @@ Resource	alltenders_utils.robot
 	...			var tender = scope.context.tender;
 	...			return tender.features = (tender.features||[]).concat(${feature});
 	...		});
-	
-#	Wait Until Page Contains Element  ${tender.form.feature}  ${common.wait}
-#	${feature_index}=	Get Data By Angular		features.length
-#	${feature_index}=	Evaluate				${feature_index}-${1}
-#	Run Keyword And Ignore Error  Set Data By Angular	features[${feature_index}].code  			"${feature.code}"
-#	Run Keyword And Ignore Error  Set Data By Angular	features[${feature_index}].title  			"${feature.title}"
-#	Run Keyword And Ignore Error  Set Data By Angular	features[${feature_index}].title_en			"${feature.title_en}"
-#	Run Keyword And Ignore Error  Set Data By Angular	features[${feature_index}].title_ru			"${feature.title_ru}"
-#	Run Keyword And Ignore Error  Set Data By Angular	features[${feature_index}].description  	"${feature.description}"
-#	Run Keyword And Ignore Error  Set Data By Angular	features[${feature_index}].featureOf  		"${feature.featureOf}"
-#	Run Keyword And Ignore Error  Set Data By Angular	features[${feature_index}].relatedItem  	"${feature.relatedItem}"
-#	Run Keyword And Ignore Error  Set Object By Angular	features[${feature_index}].enum				${feature.enum}
-#	Wait and Click Button	${tender.form.feature.apply}
-#	Wait For Progress Bar
-	
+
 Додати предмети
 	[Arguments]		${items}
 	[Documentation]
@@ -181,12 +167,14 @@ Resource	alltenders_utils.robot
 Змінити поле description
 	[Arguments]		${description}
 	[Documentation]	Change the description
-	Wait and Input Text		${tender.form.header.description}	${description}
+	Run Keyword And Ignore Error  Set Data By Angular	description  "${description}"
+#	Wait and Input Text		${tender.form.header.description}	${description}
 
 Змінити поле tenderPeriod.endDate
 	[Arguments]		${endDate}
 	[Documentation]	Change the final date for submission of proposals
-	Wait and Input Text		${tender.form.proposal.endDate}		${endDate}
+	Run Keyword And Ignore Error  Set Data By Angular	tenderPeriod.endDate  "${endDate}"
+#	Wait and Input Text		${tender.form.proposal.endDate}		${endDate}
 
 Знайти документ по ідентифікатору
 	[Arguments]		${doc_id}
@@ -195,7 +183,7 @@ Resource	alltenders_utils.robot
 	${tender}=		Get Data By Angular
 	${document}=	Find Document By Id		${tender}  ${doc_id}
 	[Return]	${document}
-	
+
 Знайти індекс документа по ідентифікатору
 	[Arguments]		${doc_id}
 	[Documentation]
@@ -214,6 +202,15 @@ Resource	alltenders_utils.robot
 	Run Keyword If	${index} < 0	Fail	Запитання id=${question_id} не знайдено
 	[Return]	${index}
 
+Знайти індекс кваліфікації по ідентифікатору
+	[Arguments]		${qualification_id}
+	[Documentation]
+	...		qualification_id:	The qualification's ID 
+	${data}=	Get Data By Angular		qualifications
+	${index}=	Find Index By Id		${data}		${qualification_id}
+	Run Keyword If	${index} < 0	Fail	Кваліфікацію id=${qualification_id} не знайдено
+	[Return]	${index}
+	
 Знайти індекс лота по ідентифікатору
 	[Arguments]		${lot_id}
 	[Documentation]
@@ -277,6 +274,25 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	alltenders.Оновити сторінку з тендером  ${username}  ${tender_uaid}
 
+Сторінка з тендером містить елемент 
+	[Arguments]		${username}  ${tender_uaid}  ${locator}
+	[Documentation]
+	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		locator:		What are we waiting for
+	alltenders.Оновити сторінку з тендером  ${username}  ${tender_uaid}
+	Run Keyword And Return  Element is Responsive  ${locator}
+
+Отримати індекс скарги
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}
+	[Documentation]
+	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		complaint_id:	The ID of the complaint
+	alltenders.Оновити сторінку з тендером  ${username}  ${tender_uaid}
+	Wait and Click Element		${tender.menu.complaints}
+	Run Keyword And Return		Знайти індекс скарги по ідентифікатору  ${complaint_id}
+
 Підтвердити дію в діалозі
 	[Arguments]		${timeout}=${common.wait}
 	[Documentation]
@@ -285,6 +301,26 @@ Resource	alltenders_utils.robot
 	Wait and Click Button						${dialog.apply}
 	Wait Until Page Does Not Contain Element	${dialog}		${timeout}
 	Wait For Progress Bar
+
+Створити вимогу
+	[Arguments]		${claim}
+	[Documentation]
+	...		claim:			The complaint that must be created
+	...		[Return]  The complaintID
+	${title}=			Get From Dictionary		${claim.data}	title
+	${description}=		Get From Dictionary		${claim.data}	description
+	Wait Until Page Contains Element	${tender.complaint.form}				${common.wait}
+	Wait and Input Text					${tender.complaint.form.title}			${title}
+	Wait and Input Text					${tender.complaint.form.description}	${description}
+	Wait and Click Button				${tender.complaint.form.make}
+	Capture Page Screenshot
+	Wait For Progress Bar
+	Wait and Click Link					${tender.menu.complaints}
+	Wait Until Page Contains Element	${tender.form.complaint}				${common.wait}
+	Capture Page Screenshot
+	${length}=			Get Data By Angular		complaints.length
+	${complaintID}=		Get Data By Angular		complaints[${length-1}].complaintID
+	[Return]  ${complaintID}
 
 Увійти в систему
 	[Arguments]		${username}
