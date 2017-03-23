@@ -12,6 +12,9 @@ import re
 import os
 import urllib
 
+def get_qualification_index(index):
+    return abs(int(index))
+    
 def build_xpath(path, *idx):
     idx = tuple(int(i) + 1 for i in idx)
     return 'xpath=' + path.replace('xpath=', '').format(*idx)
@@ -40,6 +43,26 @@ def datetime_to_iso(strDate,  pattern="%d.%m.%Y %H:%M"):
     date = datetime.strptime(strDate, pattern)
     return date.isoformat()
 
+def download_document_from_url(url, path_to_save_file):
+    f = open(path_to_save_file, 'wb')
+    f.write(urllib.urlopen(url).read())
+    f.close()
+    return os.path.basename(f.name)
+
+def find_complaint_index_by_complaintID(data, complaintID):
+    if not data:
+        return 0
+    if 'data' in data:
+        data = data['data']
+    if not isinstance(data, (list, tuple)):
+        data = [data]
+    for index, element in enumerate(data):
+        if 'complaintID' in element and element['complaintID'] == complaintID:
+            break
+    else:
+        index = -1
+    return index
+
 def find_document_by_id(data, doc_id):
     for document in data.get('documents', []):
         if doc_id in document.get('title', ''):
@@ -66,20 +89,6 @@ def find_document_by_id(data, doc_id):
                 return document
     raise Exception('Document with id {} not found'.format(doc_id))
 
-def find_complaint_index_by_complaintID(data, complaintID):
-    if not data:
-        return 0
-    if 'data' in data:
-        data = data['data']
-    if not isinstance(data, (list, tuple)):
-        data = [data]
-    for index, element in enumerate(data):
-        if element['complaintID'] == complaintID:
-            break
-    else:
-        index = -1
-    return index
-
 def find_document_index_by_id(data, doc_id):
     if not data:
         return 0
@@ -102,11 +111,22 @@ def find_index_by_id(data, object_id):
     if not isinstance(data, (list, tuple)):
         data = [data]
     for index, element in enumerate(data):
-        if element['id'] == object_id:
-            break
-        element_id = service_keywords.get_id_from_object(element)
-        if element_id == object_id:
-            break
+        if 'complaintID' in element:
+            if element['complaintID'] == object_id:
+                break
+#            else:
+#                continue
+        if 'id' in element:
+            if element['id'] == object_id:
+                break
+        try:
+            if service_keywords.get_id_from_object(element) == object_id:
+                break
+        except:
+            continue
+#        if 'title' in element or 'description' in element:
+#            if service_keywords.get_id_from_object(element) == object_id:
+#                break
     else:
         index = -1
     return index
@@ -127,39 +147,43 @@ def object_to_json(data):
 def prepare_data(initial_data):
     data = initial_data['data']
     # --- procuringEntity ---
-    procuringEntity = data['procuringEntity']
-    procuringEntity['name'] = u'ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ "ПАУЕР ГРУП"'
-    procuringEntity['name_ru'] = u'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "ПАУЕР ГРУП"'
-    procuringEntity['name_en'] = u'POWER GROUP LLC.'
-    procuringEntity['kind'] = u'general'
+    if 'procuringEntity' in data:
+        procuringEntity = data['procuringEntity']
+        procuringEntity['name'] = u'ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ "ПАУЕР ГРУП"'
+        procuringEntity['name_ru'] = u'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "ПАУЕР ГРУП"'
+        procuringEntity['name_en'] = u'POWER GROUP LLC.'
+        procuringEntity['kind'] = u'general'
     # --- identifier ---
-    identifier = procuringEntity['identifier']
-    identifier['id'] = u'35592115'
-    identifier['legalName'] = u'ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ "ПАУЕР ГРУП"'
-    identifier['legalName_ru'] = u'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "ПАУЕР ГРУП"'
-    identifier['legalName_en'] = u'POWER GROUP LLC.'
-    identifier['uri'] = u'http://test.com'
-    identifier['scheme'] = u'UA-EDR'
+    if 'identifier' in procuringEntity:
+        identifier = procuringEntity['identifier']
+        identifier['id'] = u'35592115'
+        identifier['legalName'] = u'ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ "ПАУЕР ГРУП"'
+        identifier['legalName_ru'] = u'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "ПАУЕР ГРУП"'
+        identifier['legalName_en'] = u'POWER GROUP LLC.'
+        identifier['uri'] = u'http://test.com'
+        identifier['scheme'] = u'UA-EDR'
     # --- address ---
-    address = procuringEntity['address']
-    address['countryName'] = u'Україна'
-    address['locality'] = u'киев'
-    address['region'] = u'киевская'
-    address['postalCode'] = u'01034'
-    address['streetAddress'] = u'01034, м.Київ, Шевченківський район, ВУЛИЦЯ ЯРОСЛАВІВ ВАЛ, будинок 38'
+    if 'address' in procuringEntity:
+        address = procuringEntity['address']
+        address['countryName'] = u'Україна'
+        address['locality'] = u'киев'
+        address['region'] = u'киевская'
+        address['postalCode'] = u'01034'
+        address['streetAddress'] = u'01034, м.Київ, Шевченківський район, ВУЛИЦЯ ЯРОСЛАВІВ ВАЛ, будинок 38'
     # --- additionalClassifications for all items
-    for item in data['items']:
-        for classification in item['additionalClassifications']:
-            classification['id'] = u'-----'
-            classification['description'] = u'Не визначено'
-            classification['scheme'] = u'NONE'
+    if 'items' in data:
+        for item in data['items']:
+            if 'additionalClassifications' in item:
+                for classification in item['additionalClassifications']:
+                    classification['id'] = u'-----'
+                    classification['description'] = u'Не визначено'
+                    classification['scheme'] = u'NONE'
     return initial_data
 
 def ua_date_to_iso(uadate):
     return datetime_to_iso(uadate, "%d.%m.%Y")
 
-def download_document_from_url(url, path_to_save_file):
-    f = open(path_to_save_file, 'wb')
-    f.write(urllib.urlopen(url).read())
-    f.close()
-    return os.path.basename(f.name)
+def reverse_list(start=0, end=0):
+    return list(range(start, end, -1))
+
+#if __name__ == '__main__':

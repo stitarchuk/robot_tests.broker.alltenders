@@ -196,6 +196,14 @@ ${tender.complaint.form.title}				${tender.complaint.form}//input[@ng-model="$pa
 ${tender.complaint.form.contact}			${tender.complaint.form}//button[@ng-click="ctrl.selectContact()"]
 ${tender.complaint.form.cancel}				${tender.complaint.form.footer}//button[@ng-click="model.cancel()"]
 ${tender.complaint.form.make}				${tender.complaint.form.footer}//button[@ng-click="model.make()"]
+# --- complaint answer form ---
+${tender.complaint.answer}					${tender.contact.form}//div[contains(@class, "slide-page-content") and @ng-form="pageComplaintAnswer"]
+${tender.complaint.answer.footer}			${tender.complaint.form}//div[contains(@class, "slide-page-footer")]
+${tender.complaint.answer.description}		${tender.complaint.form}//textarea[@ng-model="$parent.model.data.info.description"]
+${tender.complaint.answer.title}				${tender.complaint.form}//input[@ng-model="$parent.model.data.info.title"]
+${tender.complaint.answer.contact}			${tender.complaint.form}//button[@ng-click="ctrl.selectContact()"]
+${tender.complaint.answer.cancel}				${tender.complaint.form.footer}//button[@ng-click="model.cancel()"]
+${tender.complaint.answer.make}				${tender.complaint.form.footer}//button[@ng-click="model.make()"]
 # --- questions form ---
 ${tender.question.form}						xpath=//div[contains(@class, "slide-page-content") and @ng-form="pageQuestion"]
 ${tender.question.form.footer}				${tender.question.form}//div[contains(@class, "slide-page-footer")]
