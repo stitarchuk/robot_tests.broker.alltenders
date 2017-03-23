@@ -454,13 +454,15 @@ Resource	alltenders_utils.robot
 	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
 	${info}=	Create Dictionary	
 	Execute Angular Method  complaints[${index}].answer
-	Run Keyword And Ignore Error  Execute Javascript
-	...		var model = angular.element('div[ng-form=pageComplaintAnswer]').scope().model;
-	...		model.data.info = {
-	...			description: "${answer_data.data.resolution}",
-	...			type: "${answer_data.data.resolutionType}"
-	...		};
-	...		model.apply();
+	Execute Javascript
+	...		angular.element('div[ng-form=pageComplaintAnswer]').scope().$apply(function(scope) {
+	...			var model = scope.model;
+	...			model.data.info = {
+	...				description: "${answer_data.data.resolution}",
+	...				type: "${answer_data.data.resolutionType}"
+	...			};
+	...			model.apply();
+	...		});
 	Wait For Progress Bar
 
 Завантажити документацію до вимоги
@@ -574,10 +576,13 @@ Resource	alltenders_utils.robot
 	...		[Description]  Переводить вимогу в статус "canceled"
 	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
 	Execute Angular Method  complaints[${index}].cancel
-	Run Keyword And Ignore Error  Execute Javascript
-	...		var scope = angular.element('div[class="ui-dialog-content"]').scope();
-	...		scope.data.data.input = "${cancellation_data.data.cancellationReason}";
-	...		scope.actions.apply();
+	Execute Javascript
+	...		angular.element('div[class="ui-dialog-content"]').scope().$apply(function(scope) {
+	...			scope.data.data = {
+	...				input: "${cancellation_data.data.cancellationReason}"
+	...			};
+	...			scope.actions.apply();
+	...		});
 	Wait For Progress Bar
 
 Скасувати вимогу про виправлення умов лоту
@@ -634,7 +639,8 @@ Resource	alltenders_utils.robot
 	...		[Return]  The complaintID
 	Оновити тендер	${username}  ${tender_uaid}
 	Execute Angular Method  complaint
-	Run Keyword And Return  Створити вимогу  ${claim}
+	${complaintID}=	Створити вимогу  ${claim}
+	[Return]	${complaintID}
 
 Створити чернетку вимоги про виправлення умов лоту
 	[Arguments]		${username}  ${tender_uaid}  ${claim}  ${lot_id}
@@ -646,11 +652,15 @@ Resource	alltenders_utils.robot
 	...		[Description]  Створює вимогу у статусі "draft".
 	...		Якщо lot_index == None, то створюється вимога про виправлення умов тендера.
 	...		[Return]  The complaintID
-	Run Keyword And Return If  '${lot_id}' == '${None}'  alltenders.Створити чернетку вимоги про виправлення умов закупівлі  ${username}  ${tender_uaid}  ${claim}
+	Run Keyword And Return If  '${lot_id}' == '${None}'
+	...		alltenders.Створити чернетку вимоги про виправлення умов закупівлі  ${username}  ${tender_uaid}  ${claim}
 	Оновити тендер	${username}  ${tender_uaid}
-	${index}=		Знайти індекс лота по ідентифікатору	${lot_id}
+	${index}=		Знайти індекс лота по ідентифікатору  ${lot_id}
+	${relatedLot}=	Get Data By Angular  lots[${lot_index}].id
+	Set to dictionary  ${claim.data}  relatedLot=${relatedLot}
 	Execute Angular Method  lots[${lot_index}].complaint
-	Run Keyword And Return  Створити вимогу  ${claim}
+	${complaintID}=	Створити вимогу  ${claim}
+	[Return]	${complaintID}
 
 ##############################################################################
 #             Bid operations
@@ -680,6 +690,34 @@ Resource	alltenders_utils.robot
 	Upload File		${filepath}		${tender.form.bid.menu.uploadFile}	upload_locator=${tender.changeFile}
 	Run Keyword And Return	Munchify Data By Angular  object_path=bids.documents
 
+Змінити документацію в ставці
+	[Arguments]		${username}  ${tender_uaid}  ${doc_data}   ${docid}
+	[Documentation]
+	...		username:	The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		doc_data:	The path to file that will be uploaded
+	...		docid:		The ID document
+	Оновити тендер			${username}  ${tender_uaid}
+	Wait and Click Element  ${tender.menu.bids}
+	Execute Angular Method  upload  bids
+#	${data}=	Get Data By Angular			docuemnts	bids
+#	${index}=	Find Document Index By Id	${data}		${doc_id}
+#	${document}=	Find Document By Id		${tender}  ${doc_id}
+	Execute Javascript
+	...		angular.element('files > div').scope().$apply(function(scope) {
+	...			var data = ${doc_data}, files = scope.ctrl._files, i = 0, file, title, key;
+	...			for (; i < files.length; i++) {
+	...				file = files[i]; title = file.title;
+	...				if (title && title.indexOf("${doc_id}") != -1) {
+	...					for (key in data) {
+	...						file[key] = data[key];
+	...					}
+	...				}
+	...			}
+	...			scope.model.save();
+	...		});
+	Wait For Progress Bar
+
 Змінити цінову пропозицію
 	[Arguments]		${username}  ${tender_uaid}  ${field}  ${value}
 	[Documentation]
@@ -692,7 +730,7 @@ Resource	alltenders_utils.robot
 	Set Object By Angular	${field}	${value}	bids
 	Execute Angular Method	save  bids
 	Wait For Progress Bar
-	Execute Angular Method	activate  bids
+	Execute Angular Method	_activate  bids
 	Підтвердити дію в діалозі
 	Capture Page Screenshot
 
@@ -704,6 +742,7 @@ Resource	alltenders_utils.robot
 	...		field:			The name of field
 	Оновити тендер			${username}  ${tender_uaid}
 	Wait and Click Element	${tender.menu.bids}
+	Capture Page Screenshot
 	${value}=	Get Data By Angular  ${field}  bids
 	Should Not Be Equal		${value}	${None}
 	${value}=	Run Keyword If  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
@@ -752,7 +791,7 @@ Resource	alltenders_utils.robot
 	${data}=		Object To Json		${data}
 	Execute Javascript	angular.element('body').scope().$apply(function(scope){scope.context.tender._lots[0]._makeBid(${data});});
 	Wait For Progress Bar
-	Execute Angular Method	activate  bids
+	Execute Angular Method	_activate  bids
 	Підтвердити дію в діалозі
 	Capture Page Screenshot
 	Run Keyword And Return				Munchify Data By Angular			object_path=bids
@@ -773,10 +812,10 @@ Resource	alltenders_utils.robot
 	[Documentation]
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
-	Оновити тендер		${username}  		${tender_uaid}
+	Оновити тендер			${username}  		${tender_uaid}
 	Execute Angular Method	delete  bids
 	Підтвердити дію в діалозі
-	Run Keyword And Return				Munchify Data By Angular		object_path=bids
+	Run Keyword And Return  Munchify Data By Angular  object_path=bids
 
 ##############################################################################
 #             Document operations
@@ -1017,8 +1056,10 @@ Resource	alltenders_utils.robot
 	...		[Description] Find tender using uaid, create data dict with active status and call patch_qualification
 	...		[Return] Reply of API
 	Оновити тендер	${username}		${tender_uaid}
+	${tender}=  Get Data By Angular
+	Log Object Data  ${tender}  activate_qualification_${qualification_num}  json
 	${index}=	Get Qualification Index  ${qualification_num}
-	Execute Angular Method  qualifications[${index}].activate
+	Execute Angular Method  _qualifications[${index}].activate
 	Підтвердити дію в діалозі
 
 Відхилити кваліфікацію
@@ -1030,8 +1071,10 @@ Resource	alltenders_utils.robot
 	...		[Description] Find tender using uaid, create data dict with unsuccessful status and call patch_qualification
 	...		[Return] Reply of API
 	Оновити тендер	${username}		${tender_uaid}
+	${tender}=  Get Data By Angular
+	Log Object Data  ${tender}  reject_qualification_${qualification_num}  json
 	${index}=	Get Qualification Index  ${qualification_num}
-	Execute Angular Method  qualifications[${index}].reject
+	Execute Angular Method  _qualifications[${index}].reject
 	Підтвердити дію в діалозі
 
 Завантажити документ у кваліфікацію
@@ -1044,8 +1087,10 @@ Resource	alltenders_utils.robot
 	...		[Description] Find tender using uaid,  and call upload_qualification_document
 	...		[Return] Reply of API
 	Оновити тендер	${username}		${tender_uaid}
-	${index}=	Get Qualification Index  ${qualification_num}
-	Upload File By Angular	${document}  qualifications[${index}].upload
+	${index}=		Get Qualification Index  ${qualification_num}
+	${read_only}=	Get Data By Angular		_qualifications[${index}].$behavior.upload_readonly
+	Should Not Be True		${read_only}
+	Upload File By Angular	${document}  	_qualifications[${index}].upload
 
 Скасувати кваліфікацію
 	[Arguments]		${username}  ${tender_uaid}  ${qualification_num}
@@ -1056,8 +1101,10 @@ Resource	alltenders_utils.robot
 	...		[Description] Find tender using uaid, create data dict with cancelled status and call patch_qualification
 	...		[Return] Reply of API
 	Оновити тендер	${username}		${tender_uaid}
+	${tender}=  Get Data By Angular
+	Log Object Data  ${tender}  cancel_qualification_${qualification_num}  json
 	${index}=	Get Qualification Index  ${qualification_num}
-	Execute Angular Method  qualifications[${index}].cancel
+	Execute Angular Method  _qualifications[${index}].cancel
 	Capture Page Screenshot
 	Підтвердити дію в діалозі
 	Capture Page Screenshot
