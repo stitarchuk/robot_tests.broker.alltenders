@@ -1053,6 +1053,8 @@ Resource	alltenders_utils.robot
 	...		[Description] Find tender using uaid, create data dict with active status and call patch_qualification
 	...		[Return] Reply of API
 	Оновити тендер	${username}		${tender_uaid}
+	${tender}=  Get Data By Angular
+	Log Object Data  ${tender}  activate_qualification_${qualification_num}  json
 	${index}=	Get Qualification Index  ${qualification_num}
 	Execute Angular Method  _qualifications[${index}].activate
 	Підтвердити дію в діалозі
@@ -1066,6 +1068,8 @@ Resource	alltenders_utils.robot
 	...		[Description] Find tender using uaid, create data dict with unsuccessful status and call patch_qualification
 	...		[Return] Reply of API
 	Оновити тендер	${username}		${tender_uaid}
+	${tender}=  Get Data By Angular
+	Log Object Data  ${tender}  reject_qualification_${qualification_num}  json
 	${index}=	Get Qualification Index  ${qualification_num}
 	Execute Angular Method  _qualifications[${index}].reject
 	Підтвердити дію в діалозі
@@ -1094,6 +1098,8 @@ Resource	alltenders_utils.robot
 	...		[Description] Find tender using uaid, create data dict with cancelled status and call patch_qualification
 	...		[Return] Reply of API
 	Оновити тендер	${username}		${tender_uaid}
+	${tender}=  Get Data By Angular
+	Log Object Data  ${tender}  cancel_qualification_${qualification_num}  json
 	${index}=	Get Qualification Index  ${qualification_num}
 	Execute Angular Method  _qualifications[${index}].cancel
 	Capture Page Screenshot
