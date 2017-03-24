@@ -206,7 +206,7 @@ Resource	alltenders_utils.robot
 	[Arguments]		${qualification_id}
 	[Documentation]
 	...		qualification_id:	The qualification's ID 
-	${data}=	Get Data By Angular		qualifications
+	${data}=	Get Data By Angular		_qualifications
 	${index}=	Find Index By Id		${data}		${qualification_id}
 	Run Keyword If	${index} < 0	Fail	Кваліфікацію id=${qualification_id} не знайдено
 	[Return]	${index}
@@ -305,8 +305,8 @@ Resource	alltenders_utils.robot
 Створити вимогу
 	[Arguments]		${claim}
 	[Documentation]
-	...		claim:			The complaint that must be created
-	...		[Return]  The complaintID
+	...		claim:		The complaint that must be created
+	...		[Return]	The complaintID
 	${title}=			Get From Dictionary		${claim.data}	title
 	${description}=		Get From Dictionary		${claim.data}	description
 	Wait Until Page Contains Element	${tender.complaint.form}				${common.wait}
