@@ -53,9 +53,11 @@ Resource	alltenders_utils.robot
 	...		ELSE  Reload Angular Page
 	${tenderID}=		Get Data By Angular		tenderID
 	#	--- check if page contains the tender --- 
-	Run Keyword If  '${tenderID}' == '${tender_uaid}'
-	...		Refresh Tender Data  ${username}
-	...		ELSE  Знайти тендер по ідентифікатору  ${username}  ${tender_uaid}
+	Run Keyword If  '${tenderID}' != '${tender_uaid}'
+	...		Знайти тендер по ідентифікатору  ${username}  ${tender_uaid}
+#	Run Keyword If  '${tenderID}' == '${tender_uaid}'
+#	...		Refresh Tender Data  ${username}
+#	...		ELSE  Знайти тендер по ідентифікатору  ${username}  ${tender_uaid}
 
 Отримати інформацію із тендера
 	[Arguments]		${username}  ${tender_uaid}  ${field}
@@ -69,7 +71,7 @@ Resource	alltenders_utils.robot
 	...								${tender.menu.description}
 	Wait and Click Element		${locator}
 	${value}=	Run Keyword If	'${field}' == 'status'	Execute Angular Method  getStatus  ELSE  Get Data By Angular  ${field}
-	${value}=	Run Keyword If  '${value}' == '${None}'  Set Variable	${value}
+	${value}=	Run Keyword If  "${value}" == "${None}"  Set Variable	${value}
 	...			ELSE IF  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
 	...			ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')} or ${field.endswith('latitude')} or ${field.endswith('longitude')}  Convert To Number  ${value} 
 	...			ELSE	Set Variable	${value}
@@ -101,7 +103,7 @@ Resource	alltenders_utils.robot
 	Run Keyword If  					'${screenshot}' == '${True}'  Capture Page Screenshot
 	Wait and Click Element				${search.grid.tenderInfo.title}//span[text() = "${tender_uaid}"]
 	Wait Until Page Contains Element	${tender.form}					${common.wait}
-	Refresh Tender Data					${username}
+#	Refresh Tender Data					${username}
 
 Створити тендер
 	[Arguments]		${username}  ${tender}
@@ -190,7 +192,7 @@ Resource	alltenders_utils.robot
 	Оновити тендер	${username}  ${tender_uaid}
 	${index}=	Знайти індекс предмета по ідентифікатору  ${item_id}
 	${value}=	Get Data By Angular  items[${index}].${field}
-	${value}=	Run Keyword If  '${value}' == '${None}'  Set Variable	${value}
+	${value}=	Run Keyword If  "${value}" == "${None}"  Set Variable	${value}
 	...			ELSE IF  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
 	...			ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')} or ${field.endswith('latitude')} or ${field.endswith('longitude')}  Convert To Number  ${value} 
 	...			ELSE	Set Variable	${value}

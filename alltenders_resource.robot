@@ -1,6 +1,6 @@
 *** Variables ***
 @{empty.list}
-${common.wait}								60
+${common.wait}								90
 &{tenderTypes}								aboveThresholdUA=Відкриті торги
 ...											aboveThresholdEU=Відкриті торги з публікацією англійською мовою
 ...											competitiveDialogueUA=Конкурентний діалог
@@ -159,7 +159,7 @@ ${tender.form.lot.menu.delete}				${tender.form.lot.right.menu}//button[@x-for-t
 ${tender.form.lot.menu.question}			${tender.form.lot.right.menu}//button[@x-for-testing="tender.tooltip.questions"]
 ${tender.form.lot.menu.uploadFile}			${tender.form.lot.right.menu}//button[@x-for-testing="tender.tooltip.lot-upload"]
 # --- item in tender editor ---
-${tender.form.item.body}					(${tender.form.lot.body}//lot-items[@lots="context.tender.lots"]//div[@item="item"])[{}]
+${tender.form.item.body}					(${tender.form.lot.body}//div[contains(@class, "item") and contains(@ng-repeat, "item") and .//@item="item")[{}]
 ${tender.form.item.description}				${tender.form.item.body}//textarea[@ng-model="$parent.item.$description"]
 ${tender.form.item.cpv}						${tender.form.item.body}//div[@ng-model="item.classification"]
 ${tender.form.item.dkpp}					${tender.form.item.body}//div[@ng-model="ctrl.list"]
@@ -200,9 +200,9 @@ ${tender.complaint.form.make}				${tender.complaint.form.footer}//button[@ng-cli
 ${tender.complaint.answer}					${tender.contact.form}//div[contains(@class, "slide-page-content") and @ng-form="pageComplaintAnswer"]
 ${tender.complaint.answer.footer}			${tender.complaint.form}//div[contains(@class, "slide-page-footer")]
 ${tender.complaint.answer.description}		${tender.complaint.form}//textarea[@ng-model="$parent.model.data.info.description"]
-${tender.complaint.answer.title}				${tender.complaint.form}//input[@ng-model="$parent.model.data.info.title"]
+${tender.complaint.answer.title}			${tender.complaint.form}//input[@ng-model="$parent.model.data.info.title"]
 ${tender.complaint.answer.contact}			${tender.complaint.form}//button[@ng-click="ctrl.selectContact()"]
-${tender.complaint.answer.cancel}				${tender.complaint.form.footer}//button[@ng-click="model.cancel()"]
+${tender.complaint.answer.cancel}			${tender.complaint.form.footer}//button[@ng-click="model.cancel()"]
 ${tender.complaint.answer.make}				${tender.complaint.form.footer}//button[@ng-click="model.make()"]
 # --- questions form ---
 ${tender.question.form}						xpath=//div[contains(@class, "slide-page-content") and @ng-form="pageQuestion"]

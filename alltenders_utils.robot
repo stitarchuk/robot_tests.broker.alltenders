@@ -128,12 +128,12 @@ Munchify Data By Angular
 	${response}=	Get Data By Angular			${data_path}	${object_path}
 	Run Keyword And Return	Munchify Dictionary	${response}		${data}
 
-Refresh Tender Data
-	[Arguments]		${username}
-	[Documentation]
-	...		username:	The name of user
-	${tender}=			Munchify Data By Angular
-	Set To Dictionary	${USERS.users['${username}'].tender_data}	data=${tender}
+#Refresh Tender Data
+#	[Arguments]		${username}
+#	[Documentation]
+#	...		username:	The name of user
+#	${tender}=			Munchify Data By Angular
+#	Set To Dictionary	${USERS.users['${username}'].tender_data}	data=${tender}
 
 Reload Angular Page
 	[Arguments]		${timeout}=${common.wait}
