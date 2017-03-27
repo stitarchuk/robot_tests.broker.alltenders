@@ -69,10 +69,8 @@ Resource	alltenders_utils.robot
 	...								${tender.menu.description}
 	Wait and Click Element		${locator}
 	${value}=	Run Keyword If	'${field}' == 'status'	Execute Angular Method  getStatus  ELSE  Get Data By Angular  ${field}
-	Should Not Be Equal		${value}	${None}
-#	${value}=	Run Keyword If  '${field}' == 'value.valueAddedTaxIncluded'  Convert To Boolean  ${value}
-#	...			ELSE IF  '${field}' == 'minimalStep.amount' or '${field}' == 'value.amount' or '${field}' == 'items[0].deliveryLocation.latitude' or '${field}' == 'items[0].deliveryLocation.longitude' or '${field}' == 'items[0].quantity'  Convert To Number  ${value} 
-	${value}=	Run Keyword If  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
+	${value}=	Run Keyword If  '${value}' == '${None}'  Set Variable	${value}
+	...			ELSE IF  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
 	...			ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')} or ${field.endswith('latitude')} or ${field.endswith('longitude')}  Convert To Number  ${value} 
 	...			ELSE	Set Variable	${value}
 	[Return]	${value}
@@ -190,10 +188,10 @@ Resource	alltenders_utils.robot
 	...		item_id:		The ID of item
 	...		field:			The name of field
 	Оновити тендер	${username}  ${tender_uaid}
-	${index}=		Знайти індекс предмета по ідентифікатору  ${item_id}
-	${value}=		Get Data By Angular  items[${index}].${field}
-	Should Not Be Equal  ${value}  ${None}
-	${value}=	Run Keyword If  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
+	${index}=	Знайти індекс предмета по ідентифікатору  ${item_id}
+	${value}=	Get Data By Angular  items[${index}].${field}
+	${value}=	Run Keyword If  '${value}' == '${None}'  Set Variable	${value}
+	...			ELSE IF  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
 	...			ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')} or ${field.endswith('latitude')} or ${field.endswith('longitude')}  Convert To Number  ${value} 
 	...			ELSE	Set Variable	${value}
 	[Return]	${value}
@@ -266,10 +264,10 @@ Resource	alltenders_utils.robot
 	...		lot_id:			The ID of lot 
 	...		field:			The name of field
 	Оновити тендер	${username}  ${tender_uaid}
-	${index}=		Знайти індекс лота по ідентифікатору  ${lot_id}
-	${value}=		Get Data By Angular  lots[${index}].${field}
-	Should Not Be Equal  ${value}  ${None}
-	${value}=	Run Keyword If  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
+	${index}=	Знайти індекс лота по ідентифікатору  ${lot_id}
+	${value}=	Get Data By Angular  lots[${index}].${field}
+	${value}=	Run Keyword If  '${value}' == '${None}'  Set Variable	${value}
+	...			ELSE IF  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
 	...			ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')}  Convert To Number  ${value} 
 	...			ELSE	Set Variable  ${value}
 	[Return]	${value}
@@ -354,8 +352,8 @@ Resource	alltenders_utils.robot
 	Оновити тендер	${username}  ${tender_uaid}
 	${index}=		Знайти індекс нецінового показника по ідентифікатору  ${feature_id}
 	${value}=		Get Data By Angular  features[${index}].${field}
-	Should Not Be Equal  ${value}  ${None}
-	${value}=	Run Keyword If  ${field.endswith('value')}  Convert To Number  ${value} 
+	${value}=	Run Keyword If  '${value}' == '${None}'  Set Variable	${value}
+	...			ELSE IF  ${field.endswith('value')}  Convert To Number  ${value} 
 	...			ELSE  Set Variable  ${value}
 #	...			ELSE  Convert To String  ${value}
 	[Return]	${value}
@@ -427,8 +425,6 @@ Resource	alltenders_utils.robot
 	Wait and Click Link	${tender.menu.questions}
 	${index}=	Знайти індекс запитання по ідентифікатору  ${question_id}
 	${value}=	Get Data By Angular  questions[${index}].${field}
-	Should Not Be Equal  ${value}  ${None}
-#	${value}=	Convert To String  ${value}
 	[Return]	${value}
 	
 ##############################################################################
@@ -506,8 +502,6 @@ Resource	alltenders_utils.robot
 	...		award_id:		The ID of the award
 	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
 	${value}=	Get Data By Angular  complaints[${index}].${field}
-	Should Not Be Equal  ${value}  ${None}
-#	${value}=	Convert To String  ${value}
 	[Return]	${value}
 
 Перетворити вимогу про виправлення умов закупівлі в скаргу
@@ -675,6 +669,9 @@ Resource	alltenders_utils.robot
 	Оновити тендер						${username}  		${tender_uaid}
 	Wait and Click Link					${tender.menu.bids}
 	Wait Until Page Contains Element	${tender.form.bid}	${common.wait}
+	${tender}=  		Get Data By Angular
+	${tender_file}=		extract_file_name  ${filepath}
+	Log Object Data  ${tender}  ${tender_file}  json
 	Upload File							${filepath}			${tender.form.bid.menu.uploadFile}
 	Run Keyword And Return				Munchify Data By Angular		object_path=bids.documents
 
@@ -700,12 +697,13 @@ Resource	alltenders_utils.robot
 	Оновити тендер			${username}  ${tender_uaid}
 	Wait and Click Element  ${tender.menu.bids}
 	Execute Angular Method  upload  bids
+	${data}=	Object To Json  ${doc_data}
 #	${data}=	Get Data By Angular			docuemnts	bids
 #	${index}=	Find Document Index By Id	${data}		${doc_id}
 #	${document}=	Find Document By Id		${tender}  ${doc_id}
 	Execute Javascript
 	...		angular.element('files > div').scope().$apply(function(scope) {
-	...			var data = ${doc_data}, files = scope.ctrl._files, i = 0, file, title, key;
+	...			var data = ${data}, files = scope.ctrl._files, i = 0, file, title, key;
 	...			for (; i < files.length; i++) {
 	...				file = files[i]; title = file.title;
 	...				if (title && title.indexOf("${doc_id}") != -1) {
@@ -731,7 +729,8 @@ Resource	alltenders_utils.robot
 	Execute Angular Method	save  bids
 	Wait For Progress Bar
 	Execute Angular Method	_activate  bids
-	Підтвердити дію в діалозі
+	${status}=	Run Keyword And Return Status  Page Should Contain Element  ${dialog}
+	Run Keyword If  ${status}  Підтвердити дію в діалозі
 	Capture Page Screenshot
 
 Отримати інформацію із пропозиції
@@ -744,8 +743,8 @@ Resource	alltenders_utils.robot
 	Wait and Click Element	${tender.menu.bids}
 	Capture Page Screenshot
 	${value}=	Get Data By Angular  ${field}  bids
-	Should Not Be Equal		${value}	${None}
-	${value}=	Run Keyword If  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
+	${value}=	Run Keyword If  '${value}' == '${None}'  Set Variable	${value}
+	...			ELSE IF  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
 	...			ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')} or ${field.endswith('latitude')} or ${field.endswith('longitude')}  Convert To Number  ${value} 
 	...			ELSE	Set Variable	${value}
 	[Return]	${value}
@@ -862,8 +861,6 @@ Resource	alltenders_utils.robot
 	Оновити тендер	${username}  ${tender_uaid}
 	${document}=	Знайти документ по ідентифікатору	${doc_id}
 	${value}=		Get From Dictionary		${document}	${field}
-	Should Not Be Equal  ${value}  ${None}
-#	${value}=		Convert To String  ${value}
 	[Return]	${value}
 
 ##############################################################################

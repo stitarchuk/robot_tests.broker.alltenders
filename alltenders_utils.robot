@@ -107,8 +107,9 @@ Get Data By Angular
 	...				}
 	...				return result;
 	...			}, paths = '${path}'.split('.'), value = scope.context, i = 0, path, index;
-	...			for (; i < paths.length; i++) {
+	...			for (; i < paths.length && value; i++) {
 	...				if ((path = paths[i].split("[")).length > 1) value = value[path[0]][parseInt(path[1])]; else value = value[path];
+	...				if (!value) break;
 	...			}
 	...			return clearAngularData(value);
 	...		});

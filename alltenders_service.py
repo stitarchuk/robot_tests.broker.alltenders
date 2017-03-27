@@ -114,8 +114,6 @@ def find_index_by_id(data, object_id):
         if 'complaintID' in element:
             if element['complaintID'] == object_id:
                 break
-#            else:
-#                continue
         if 'id' in element:
             if element['id'] == object_id:
                 break
@@ -124,9 +122,6 @@ def find_index_by_id(data, object_id):
                 break
         except:
             continue
-#        if 'title' in element or 'description' in element:
-#            if service_keywords.get_id_from_object(element) == object_id:
-#                break
     else:
         index = -1
     return index
@@ -185,5 +180,8 @@ def ua_date_to_iso(uadate):
 
 def reverse_list(start=0, end=0):
     return list(range(start, end, -1))
+
+def extract_file_name(path):
+    return os.path.basename(path).split('.')[0]
 
 #if __name__ == '__main__':
