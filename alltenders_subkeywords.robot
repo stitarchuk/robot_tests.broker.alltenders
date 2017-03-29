@@ -29,75 +29,66 @@ Resource	alltenders_utils.robot
 	#	--- check for dialog ---
 	${status}=	Run Keyword And Return Status  Page Should Contain Element  ${dialog}
 	Run Keyword If  ${status}  Підтвердити дію в діалозі  ELSE  Wait For Progress Bar
-	${lot_index}=				Get Data By Angular		lots.length
-	${lot_index}=				Evaluate				${lot_index}-${1}
+	${lot_index}=	Find And Get Data	lots.length
+	${lot_index}=	Evaluate			${lot_index}-${1}
 	#	--- fill lot attributes ---
-	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].id  					"${lot.id}"
-	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].title				"${lot.title}"
-	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].title_ru				"${lot.title_ru}"
-	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].title_en				"${lot.title_en}"
-	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].description			"${lot.description}"
-	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].description_ru		"${lot.description_ru}"
-	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].description_en		"${lot.description_en}"
-	Run Keyword And Ignore Error  Set Object By Angular	lots[${lot_index}].value  				${lot.value}
-	Run Keyword And Ignore Error  Set Object By Angular	lots[${lot_index}].minimalStep  		${lot.minimalStep}
-	Run Keyword And Ignore Error  Set Data By Angular	lots[${lot_index}].minimalStep.amount	${lot.minimalStep.amount}
+	Run Keyword And Ignore Error  Try To Set Data  lots[${lot_index}].id  "${lot.id}"
+	Run Keyword And Ignore Error  Try To Set Data  lots[${lot_index}].title  "${lot.title}"
+	Run Keyword And Ignore Error  Try To Set Data  lots[${lot_index}].title_ru  "${lot.title_ru}"
+	Run Keyword And Ignore Error  Try To Set Data  lots[${lot_index}].title_en  "${lot.title_en}"
+	Run Keyword And Ignore Error  Try To Set Data  lots[${lot_index}].description  "${lot.description}"
+	Run Keyword And Ignore Error  Try To Set Data  lots[${lot_index}].description_ru  "${lot.description_ru}"
+	Run Keyword And Ignore Error  Try To Set Data  lots[${lot_index}].description_en  "${lot.description_en}"
+	Run Keyword And Ignore Error  Try To Set Object  lots[${lot_index}].value  ${lot.value}
+	Run Keyword And Ignore Error  Try To Set Object  lots[${lot_index}].minimalStep  ${lot.minimalStep}
+	Run Keyword And Ignore Error  Try To Set Data  lots[${lot_index}].minimalStep.amount  ${lot.minimalStep.amount}
 	[Return]	${lot_index}
 	
 Додати лоти
 	[Arguments]		${lots}
-	[Documentation]
-	...		lot: The lot's data
+	[Documentation]  lot:  The lot's data
 	:FOR  ${lot}  IN  @{lots}
 	\	Додати лот		${lot}
 
 Додати нецінові показники
 	[Arguments]		${features}
-	[Documentation]
-	...		features: The features data
-	Run Keyword And Ignore Error  Set Object By Angular  features  ${features}
+	[Documentation]  features:  The features data
+	Run Keyword And Ignore Error  Try To Set Object  features  ${features}
 
 Додати неціновий показник
 	[Arguments]		${feature}
-	[Documentation]
-	...		feature:		The feature data
+	[Documentation]  feature:  The feature data
 	${feature}=  Object To Json  ${feature}
-	Execute Javascript
-	...		return angular.element('body').scope().$apply(function(scope) {
-	...			var tender = scope.context.tender;
-	...			return tender.features = (tender.features||[]).concat(${feature});
-	...		});
+	Execute Javascript  angular.element('body').scope().$apply(function(scope) { scope.context.tender.features = (scope.context.tender.features||[]).concat(${feature});});
 
 Додати предмети
 	[Arguments]		${items}
-	[Documentation]
-	...		items:		The items data
+	[Documentation]  items:  The items data
 	:FOR  ${item}  IN  @{items}
 	\	Додати предмет	${item}
 	
 Додати предмет
 	[Arguments]		${item}
-	[Documentation]
-	...		item:		The item's data
-	${status}  ${lot_index}=	Run Keyword And Ignore Error  Знайти індекс лота по ідентифікатору  ${item.relatedLot}
-	${lot_index}=				Set Variable If  '${status}' == 'PASS'  ${lot_index}  ${0}
-	${idxs}=					Create List				${lot_index}
-	${item_index}=				Get Data By Angular		items.length
+	[Documentation]  item:  The item's data
+	${status}  ${lot_index}=  Run Keyword And Ignore Error  Знайти індекс лота по ідентифікатору  ${item.relatedLot}
+	${lot_index}=	Set Variable If  '${status}' == 'PASS'  ${lot_index}  ${0}
+	${idxs}=		Create List  ${lot_index}
+	${item_index}=	Find And Get Data  items.length
 	Build Xpath and Run Keyword	${idxs}	Wait and Click Button	${tender.form.lot.addItem}
 	Wait For Progress Bar
 	#	--- fill item attributes ---
-	Run Keyword And Ignore Error  Set Data By Angular	items[${item_index}].id  							"${item.id}"
-	Run Keyword And Ignore Error  Set Data By Angular	items[${item_index}].relatedLot  					"${item.relatedLot}"
-	Run Keyword And Ignore Error  Set Data By Angular	items[${item_index}].description					"${item.description}"
-	Run Keyword And Ignore Error  Set Data By Angular	items[${item_index}].description_ru					"${item.description_ru}"
-	Run Keyword And Ignore Error  Set Data By Angular	items[${item_index}].description_en					"${item.description_en}"
-	Run Keyword And Ignore Error  Set Object By Angular	items[${item_index}].classification					${item.classification}
-	Run Keyword And Ignore Error  Set Object By Angular	items[${item_index}].additionalClassifications		${item.additionalClassifications}
-	Run Keyword And Ignore Error  Set Data By Angular	items[${item_index}].quantity						${item.quantity}
-	Run Keyword And Ignore Error  Set Object By Angular	items[${item_index}].unit							${item.unit}
-	Run Keyword And Ignore Error  Set Object By Angular	items[${item_index}].deliveryDate					${item.deliveryDate}
-	Run Keyword And Ignore Error  Set Object By Angular	items[${item_index}].deliveryLocation				${item.deliveryLocation}
-	Run Keyword And Ignore Error  Set Object By Angular	items[${item_index}].deliveryAddress				${item.deliveryAddress}
+	Run Keyword And Ignore Error  Try To Set Data  items[${item_index}].id  "${item.id}"
+	Run Keyword And Ignore Error  Try To Set Data  items[${item_index}].relatedLot  "${item.relatedLot}"
+	Run Keyword And Ignore Error  Try To Set Data  items[${item_index}].description  "${item.description}"
+	Run Keyword And Ignore Error  Try To Set Data  items[${item_index}].description_ru  "${item.description_ru}"
+	Run Keyword And Ignore Error  Try To Set Data  items[${item_index}].description_en  "${item.description_en}"
+	Run Keyword And Ignore Error  Try To Set Object  items[${item_index}].classification  ${item.classification}
+	Run Keyword And Ignore Error  Try To Set Object  items[${item_index}].additionalClassifications  ${item.additionalClassifications}
+	Run Keyword And Ignore Error  Try To Set Data  items[${item_index}].quantity  ${item.quantity}
+	Run Keyword And Ignore Error  Try To Set Object  items[${item_index}].unit  ${item.unit}
+	Run Keyword And Ignore Error  Try To Set Object  items[${item_index}].deliveryDate  ${item.deliveryDate}
+	Run Keyword And Ignore Error  Try To Set Object  items[${item_index}].deliveryLocation  ${item.deliveryLocation}
+	Run Keyword And Ignore Error  Try To Set Object  items[${item_index}].deliveryAddress  ${item.deliveryAddress}
 
 Додати цінову пропозицію
 	[Arguments]		${bid}  ${lot_index}=${0}  ${lots_ids}=${False}
@@ -107,9 +98,8 @@ Resource	alltenders_utils.robot
 	...		lots_ids:	List ID of lots
 	${data}=	Get From Dictionary		${bid}						data
 	${idxs}=	Create List				${lot_index}
-	Build Xpath and Run Keyword	${idxs}  Wait and Click Button		${tender.form.lot.menu.bid}
-	Run Keyword If  ${lots_ids}		Set Bids	${bid.data.lotValues}	${lots_ids}
-	...		ELSE	Set Bid  ${bid.data.value}  ${idxs}
+	Build Xpath and Run Keyword	${idxs}  Wait and Click Button  ${tender.form.lot.menu.bid}
+	Run Keyword If  ${lots_ids}  Set Bids  ${bid.data.lotValues}  ${lots_ids}  ELSE  Set Bid  ${bid.data.value}  ${idxs}
 	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch1"]
 	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch2"]
 	Wait and Click Button				${tender.contact.form.make}
@@ -122,8 +112,8 @@ Resource	alltenders_utils.robot
 	[Documentation]
 	...		feature:	The feature data
 	...		lot_id:		The ID of the lot
-	${index}=	Знайти індекс лота по ідентифікатору  ${lot_id}
-	${lot_id}=	Get Data By Angular  lots[${index}].id
+	${index}=  Знайти індекс лота по ідентифікатору  ${lot_id}
+	${lot_id}=  Find And Get Data  lots[${index}].id
 	Set To Dictionary  ${feature}  relatedItem=${lot_id}
 	Додати неціновий показник	${feature}
 	Save Tender
@@ -133,8 +123,8 @@ Resource	alltenders_utils.robot
 	[Documentation]
 	...		feature:	The feature data
 	...		item_id:	The ID of the item
-	${index}=		Знайти індекс предмета по ідентифікатору  ${item_id}
-	${item_id}=		Get Data By Angular  items[${index}].id
+	${index}=  Знайти індекс предмета по ідентифікатору  ${item_id}
+	${item_id}=  Find And Get Data  items[${index}].id
 	Set To Dictionary  ${feature}  relatedItem=${item_id}
 	Додати неціновий показник	${feature}
 	Save Tender
@@ -167,29 +157,27 @@ Resource	alltenders_utils.robot
 Змінити поле description
 	[Arguments]		${description}
 	[Documentation]	Change the description
-	Run Keyword And Ignore Error  Set Data By Angular	description  "${description}"
-#	Wait and Input Text		${tender.form.header.description}	${description}
+	Run Keyword And Ignore Error  Try To Set Data  description  "${description}"
 
 Змінити поле tenderPeriod.endDate
 	[Arguments]		${endDate}
 	[Documentation]	Change the final date for submission of proposals
-	Run Keyword And Ignore Error  Set Data By Angular	tenderPeriod.endDate  "${endDate}"
-#	Wait and Input Text		${tender.form.proposal.endDate}		${endDate}
+	Run Keyword And Ignore Error  Try To Set Data  tenderPeriod.endDate  "${endDate}"
 
 Знайти документ по ідентифікатору
 	[Arguments]		${doc_id}
 	[Documentation]
 	...		doc_id:			The document's ID 
-	${tender}=		Get Data By Angular
-	${document}=	Find Document By Id		${tender}  ${doc_id}
+	${data}=  Find And Get Data
+	${document}=  Find Document By Id  ${data}  ${doc_id}
 	[Return]	${document}
 
 Знайти індекс документа по ідентифікатору
 	[Arguments]		${doc_id}
 	[Documentation]
 	...		doc_id:			The document's ID 
-	${data}=	Get Data By Angular			documents
-	${index}=	Find Document Index By Id	${data}		${doc_id}
+	${data}=  Find And Get Data  documents
+	${index}=  Find Document Index By Id  ${data}  ${doc_id}
 	Run Keyword If	${index} < 0	Fail	Документ id=${doc_id} не знайдено
 	[Return]	${index}
 
@@ -197,8 +185,8 @@ Resource	alltenders_utils.robot
 	[Arguments]		${question_id}
 	[Documentation]
 	...		question_id:	The question's ID 
-	${data}=	Get Data By Angular		questions
-	${index}=	Find Index By Id		${data}		${question_id}
+	${data}=  Find And Get Data  questions
+	${index}=  Find Index By Id  ${data}  ${question_id}
 	Run Keyword If	${index} < 0	Fail	Запитання id=${question_id} не знайдено
 	[Return]	${index}
 
@@ -206,8 +194,8 @@ Resource	alltenders_utils.robot
 	[Arguments]		${qualification_id}
 	[Documentation]
 	...		qualification_id:	The qualification's ID 
-	${data}=	Get Data By Angular		_qualifications
-	${index}=	Find Index By Id		${data}		${qualification_id}
+	${data}=  Find And Get Data  _qualifications
+	${index}=  Find Index By Id  ${data}  ${qualification_id}
 	Run Keyword If	${index} < 0	Fail	Кваліфікацію id=${qualification_id} не знайдено
 	[Return]	${index}
 	
@@ -215,8 +203,8 @@ Resource	alltenders_utils.robot
 	[Arguments]		${lot_id}
 	[Documentation]
 	...		lot_id:			The ID of the lot
-	${data}=	Get Data By Angular		lots
-	${index}=	Find Index By Id		${data}		${lot_id}
+	${data}=  Find And Get Data  lots
+	${index}=  Find Index By Id  ${data}  ${lot_id}
 	Run Keyword If	${index} < 0	Fail	Лот id=${lot_id} не знайдено
 	[Return]	${index}
 	
@@ -224,8 +212,8 @@ Resource	alltenders_utils.robot
 	[Arguments]		${feature_id}
 	[Documentation]
 	...		feature_id:		The ID of the feature
-	${data}=	Get Data By Angular		features
-	${index}=	Find Index By Id		${data}		${feature_id}
+	${data}=  Find And Get Data  features
+	${index}=  Find Index By Id  ${data}  ${feature_id}
 	Run Keyword If	${index} < 0	Fail	Неціновий показник id=${feature_id} не знайдено
 	[Return]	${index}
 
@@ -233,8 +221,8 @@ Resource	alltenders_utils.robot
 	[Arguments]		${item_id}
 	[Documentation]
 	...		item_id:		The ID of item
-	${data}=	Get Data By Angular		items
-	${index}=	Find Index By Id		${data}		${item_id}
+	${data}=  Find And Get Data  items
+	${index}=  Find Index By Id  ${data}  ${item_id}
 	Run Keyword If	${index} < 0	Fail	Предмет закупівлі id=${item_id} не знайдено
 	[Return]	${index}
 
@@ -242,8 +230,8 @@ Resource	alltenders_utils.robot
 	[Arguments]		${complaint_id}
 	[Documentation]
 	...		complaint_id:	The ID of the complaint
-	${data}=	Get Data By Angular		complaints
-	${index}=	Find Index By Id		${data}		${complaint_id}
+	${data}=  Find And Get Data  complaints
+	${index}=  Find Index By Id  ${data}  ${complaint_id}
 	Run Keyword If	${index} < 0	Fail	Скаргу id=${complaint_id} не знайдено
 	[Return]	${index}
 
@@ -318,8 +306,8 @@ Resource	alltenders_utils.robot
 	Wait and Click Link					${tender.menu.complaints}
 	Wait Until Page Contains Element	${tender.form.complaint}				${common.wait}
 	Capture Page Screenshot
-	${length}=			Get Data By Angular		complaints.length
-	${complaintID}=		Get Data By Angular		complaints[${length-1}].complaintID
+	${length}=			Find And Get Data  complaints.length
+	${complaintID}=		Find And Get Data  complaints[${length-1}].complaintID
 	[Return]  ${complaintID}
 
 Увійти в систему

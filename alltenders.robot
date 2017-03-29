@@ -15,7 +15,7 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		lot_index:		Index of lot (default 0)
 	Оновити тендер			${username}		${tender_uaid}
-	Run Keyword And Return  Get Data By Angular  _lots[${lot_index}].auctionUrl
+	Run Keyword And Return  Find And Get Data  _lots[${lot_index}].auctionUrl
 
 Підготувати клієнт для користувача
 	[Arguments]  ${username}
@@ -48,16 +48,11 @@ Resource	alltenders_utils.robot
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
 	Switch Browser  ${username}
-	Run Keyword If  '${username}' == '${viewer}'
-	...		Go To  ${USERS.users['${username}'].homepage}
-	...		ELSE  Reload Angular Page
-	${tenderID}=		Get Data By Angular		tenderID
+	Run Keyword If  '${username}' == '${viewer}'  Go To  ${USERS.users['${username}'].homepage}  ELSE  Reload Angular Page
+	${tenderID}=  Find And Get Data  tenderID
 	#	--- check if page contains the tender --- 
 	Run Keyword If  '${tenderID}' != '${tender_uaid}'
 	...		Знайти тендер по ідентифікатору  ${username}  ${tender_uaid}
-#	Run Keyword If  '${tenderID}' == '${tender_uaid}'
-#	...		Refresh Tender Data  ${username}
-#	...		ELSE  Знайти тендер по ідентифікатору  ${username}  ${tender_uaid}
 
 Отримати інформацію із тендера
 	[Arguments]		${username}  ${tender_uaid}  ${field}
@@ -70,9 +65,8 @@ Resource	alltenders_utils.robot
 	...								'bids' in '${field}'			${tender.menu.bids}
 	...								${tender.menu.description}
 	Wait and Click Element		${locator}
-	${value}=	Run Keyword If	'${field}' == 'status'	Execute Angular Method  getStatus  ELSE  Get Data By Angular  ${field}
-	${value}=	Run Keyword If  "${value}" == "${None}"  Set Variable	${value}
-	...			ELSE IF  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
+	${value}=	Run Keyword If	'${field}' == 'status'	Call Page Event  getStatus  ELSE  Find And Get Data  ${field}
+	${value}=	Run Keyword If  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
 	...			ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')} or ${field.endswith('latitude')} or ${field.endswith('longitude')}  Convert To Number  ${value} 
 	...			ELSE	Set Variable	${value}
 	[Return]	${value}
@@ -103,7 +97,6 @@ Resource	alltenders_utils.robot
 	Run Keyword If  					'${screenshot}' == '${True}'  Capture Page Screenshot
 	Wait and Click Element				${search.grid.tenderInfo.title}//span[text() = "${tender_uaid}"]
 	Wait Until Page Contains Element	${tender.form}					${common.wait}
-#	Refresh Tender Data					${username}
 
 Створити тендер
 	[Arguments]		${username}  ${tender}
@@ -121,25 +114,25 @@ Resource	alltenders_utils.robot
 	Wait and Click Button		${create.tender.create}
 	Sleep						2
 	#	--- fill attributes for all tenders ---
-	Run Keyword And Ignore Error  Set Data By Angular	title						"${data.title}"
-	Run Keyword And Ignore Error  Set Data By Angular	title_ru					"${data.title_ru}"
-	Run Keyword And Ignore Error  Set Data By Angular	title_en					"${data.title_en}"
-	Run Keyword And Ignore Error  Set Data By Angular	description					"${data.description}"
-	Run Keyword And Ignore Error  Set Data By Angular	description_ru				"${data.description_ru}"
-	Run Keyword And Ignore Error  Set Data By Angular	description_en				"${data.description_en}"
-	Run Keyword And Ignore Error  Set Object By Angular	value  						${data.value}
-	Run Keyword And Ignore Error  Set Object By Angular	minimalStep  				${data.minimalStep}
-	Run Keyword And Ignore Error  Set Data By Angular	minimalStep.amount			${data.minimalStep.amount}
-	Run Keyword And Ignore Error  Set Object By Angular	tenderPeriod  				${data.tenderPeriod}
-	Run Keyword And Ignore Error  Set Object By Angular	enquiryPeriod  				${data.enquiryPeriod}
-	Run Keyword And Ignore Error  Set Object By Angular	procuringEntity				${data.procuringEntity}
-	Run Keyword And Ignore Error  Set Data By Angular	cause						"${data.cause}"
-	Run Keyword And Ignore Error  Set Data By Angular	causeDescription			"${data.causeDescription}"
-	Run Keyword And Ignore Error  Set Data By Angular	procurementMethodDetails	"${data.procurementMethodDetails}"
+	Run Keyword And Ignore Error  Try To Set Data  title  "${data.title}"
+	Run Keyword And Ignore Error  Try To Set Data  title_ru  "${data.title_ru}"
+	Run Keyword And Ignore Error  Try To Set Data  title_en  "${data.title_en}"
+	Run Keyword And Ignore Error  Try To Set Data  description  "${data.description}"
+	Run Keyword And Ignore Error  Try To Set Data  description_ru  "${data.description_ru}"
+	Run Keyword And Ignore Error  Try To Set Data  description_en  "${data.description_en}"
+	Run Keyword And Ignore Error  Try To Set Object  value  ${data.value}
+	Run Keyword And Ignore Error  Try To Set Object  minimalStep  ${data.minimalStep}
+	Run Keyword And Ignore Error  Try To Set Data  minimalStep.amount  ${data.minimalStep.amount}
+	Run Keyword And Ignore Error  Try To Set Object  tenderPeriod  ${data.tenderPeriod}
+	Run Keyword And Ignore Error  Try To Set Object  enquiryPeriod  ${data.enquiryPeriod}
+	Run Keyword And Ignore Error  Try To Set Object  procuringEntity  ${data.procuringEntity}
+	Run Keyword And Ignore Error  Try To Set Data  cause  "${data.cause}"
+	Run Keyword And Ignore Error  Try To Set Data  causeDescription  "${data.causeDescription}"
+	Run Keyword And Ignore Error  Try To Set Data  procurementMethodDetails  "${data.procurementMethodDetails}"
 	#	--- add lots ---
 	Run Keyword And Ignore Error  Додати лоти			${data.lots}
 	#	--- add items ---
-	Execute Angular Method	items[0].delete
+	Call Page Event		items[0].delete
 	Підтвердити дію в діалозі
 	Додати предмети   		${items}
 	#	--- fill features ---
@@ -148,9 +141,8 @@ Resource	alltenders_utils.robot
 	${locator}=		Set Variable If  'negotiation' in '${procurementMethodType}' or '${procurementMethodType}' == 'reporting'	Активний	Період уточнень
 	Save Tender		${locator}  ${True}
 	#	--- gets tender data ---
-	${tender_uaid}=			Get Data By Angular		tenderID
-	${id}=    				Get Data By Angular		id
-	Log						${tender_uaid}
+	${tender_uaid}=  Find And Get Data  tenderID
+	${id}=           Find And Get Data  id
 	Set To Dictionary		${data}				id=${id}	tenderID=${tender_uaid}
 	Log Object Data			${tender}			created_tender
 	[Return]	${tender_uaid}
@@ -167,8 +159,8 @@ Resource	alltenders_utils.robot
 	...		item_id:		The ID of item to be removed
 	...		lot_id:			The ID of lot wich item to be removed
 	Оновити тендер	${username}  ${tender_uaid}
-	${index}=		Знайти індекс предмета по ідентифікатору	${item_id}
-	Execute Angular Method		items[${index}].delete
+	${index}=  Знайти індекс предмета по ідентифікатору	${item_id}
+	Call Page Event  items[${index}].delete
 	Підтвердити дію в діалозі
 	Save Tender
 			
@@ -191,9 +183,8 @@ Resource	alltenders_utils.robot
 	...		field:			The name of field
 	Оновити тендер	${username}  ${tender_uaid}
 	${index}=	Знайти індекс предмета по ідентифікатору  ${item_id}
-	${value}=	Get Data By Angular  items[${index}].${field}
-	${value}=	Run Keyword If  "${value}" == "${None}"  Set Variable	${value}
-	...			ELSE IF  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
+	${value}=	Find And Get Data  items[${index}].${field}
+	${value}=	Run Keyword If  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
 	...			ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')} or ${field.endswith('latitude')} or ${field.endswith('longitude')}  Convert To Number  ${value} 
 	...			ELSE	Set Variable	${value}
 	[Return]	${value}
@@ -210,11 +201,11 @@ Resource	alltenders_utils.robot
 	...		lot_id:			The ID of lot to be removed
 	Оновити тендер	${username}  ${tender_uaid}
 	${index}=	Знайти індекс лота по ідентифікатору	${lot_id}
-	${count}=	Get Data By Angular  lots[${index}]._items.length
+	${count}=	Find And Get Data  lots[${index}]._items.length
 	:FOR  ${idx}  IN RANGE  ${count}  0  -1
-	\	Execute Angular Method		lots[${index}]._items[${idx-1}].delete
+	\	Call Page Event  lots[${index}]._items[${idx-1}].delete
 	\	Підтвердити дію в діалозі
-	Execute Angular Method		lots[${index}].delete
+	Call Page Event  lots[${index}].delete
 	Підтвердити дію в діалозі
 	Save Tender
 
@@ -226,8 +217,8 @@ Resource	alltenders_utils.robot
 	...		lot_id:			The ID of lot
 	...		item:			The item's data
 	Оновити тендер	${username}  ${tender_uaid}
-	${index}=		Знайти індекс лота по ідентифікатору  ${lot_id}
-	${lot_id}=		Get Data By Angular  lots[${index}].id
+	${index}=	Знайти індекс лота по ідентифікатору  ${lot_id}
+	${lot_id}=	Find And Get Data  lots[${index}].id
 	Set To Dictionary  	${item}  relatedLot=${lot_id}
 	Додати предмет	${item}
 	Save Tender		${tender_uaid}
@@ -253,9 +244,9 @@ Resource	alltenders_utils.robot
 	...		field:			The name of field
 	...		value:			The value to be set
 	Оновити тендер	${username}  ${tender_uaid}
-	${index}=	Знайти індекс лота по ідентифікатору	${lot_id}
-	${value}=	Set Variable If  ${field.endswith('valueAddedTaxIncluded')} or ${field.endswith('amount')} or ${field.endswith('quantity')}  ${value}  "${value}"
-	Set Data By Angular  lots[${index}].${field}  ${value}
+	${index}=  Знайти індекс лота по ідентифікатору	${lot_id}
+	${value}=  Set Variable If  ${field.endswith('valueAddedTaxIncluded')} or ${field.endswith('amount')} or ${field.endswith('quantity')}  ${value}  "${value}"
+	Try To Set Data  lots[${index}].${field}  ${value}
 	Save Tender
 
 Отримати інформацію із лоту
@@ -267,9 +258,8 @@ Resource	alltenders_utils.robot
 	...		field:			The name of field
 	Оновити тендер	${username}  ${tender_uaid}
 	${index}=	Знайти індекс лота по ідентифікатору  ${lot_id}
-	${value}=	Get Data By Angular  lots[${index}].${field}
-	${value}=	Run Keyword If  '${value}' == '${None}'  Set Variable	${value}
-	...			ELSE IF  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
+	${value}=	Find And Get Data  lots[${index}].${field}
+	${value}=	Run Keyword If  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
 	...			ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')}  Convert To Number  ${value} 
 	...			ELSE	Set Variable  ${value}
 	[Return]	${value}
@@ -287,7 +277,6 @@ Resource	alltenders_utils.robot
 	Оновити тендер	${username}	${tender_uaid}
 	${index}=		Додати лот	${lot.data}
 	Save Tender
-	Run Keyword And Return	Munchify Data By Angular 	lots[${index}]
 
 Створити лот із предметом закупівлі
 	[Arguments]		${username}  ${tender_uaid}  ${lot}  ${item}
@@ -297,12 +286,11 @@ Resource	alltenders_utils.robot
 	...		lot:			The data of lot to be create
 	...		item:			The data of item to be add
 	Оновити тендер	${username}	${tender_uaid}
-	${index}=	Додати лот				${lot.data}
-	${lot_id}=	Get Data By Angular		lots[${index}].id
-	Set To Dictionary		${item}		relatedLot=${lot_id}
-	Додати предмет			${item}
+	${index}=	Додати лот  ${lot.data}
+	${lot_id}=	Find And Get Data  lots[${index}].id
+	Set To Dictionary  ${item}  relatedLot=${lot_id}
+	Додати предмет  ${item}
 	Save Tender
-	Run Keyword And Return	Munchify Data By Angular 	lots[${index}]
 
 ##############################################################################
 #             Feature operations
@@ -315,8 +303,8 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		feature_id:		The ID of feature
   	Оновити тендер	${username}		${tender_uaid}
-	${index}=		Знайти індекс нецінового показника по ідентифікатору  ${feature_id}
-	Execute Angular Method		features[${index}].delete
+	${index}=  Знайти індекс нецінового показника по ідентифікатору  ${feature_id}
+	Call Page Event  features[${index}].delete
 	Підтвердити дію в діалозі
 	Save Tender
 
@@ -352,12 +340,10 @@ Resource	alltenders_utils.robot
 Отримати інформацію із нецінового показника
 	[Arguments]		${username}  ${tender_uaid}  ${feature_id}  ${field}
 	Оновити тендер	${username}  ${tender_uaid}
-	${index}=		Знайти індекс нецінового показника по ідентифікатору  ${feature_id}
-	${value}=		Get Data By Angular  features[${index}].${field}
-	${value}=	Run Keyword If  '${value}' == '${None}'  Set Variable	${value}
-	...			ELSE IF  ${field.endswith('value')}  Convert To Number  ${value} 
+	${index}=	Знайти індекс нецінового показника по ідентифікатору  ${feature_id}
+	${value}=	Find And Get Data  features[${index}].${field}
+	${value}=	Run Keyword If  ${field.endswith('value')}  Convert To Number  ${value} 
 	...			ELSE  Set Variable  ${value}
-#	...			ELSE  Convert To String  ${value}
 	[Return]	${value}
 
 ##############################################################################
@@ -423,10 +409,10 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		question_id:	The question's ID 
 	...		field:			The name of field
-	Оновити тендер	${username}  ${tender_uaid}
-	Wait and Click Link	${tender.menu.questions}
+	Оновити тендер  ${username}  ${tender_uaid}
+	Wait and Click Link  ${tender.menu.questions}
 	${index}=	Знайти індекс запитання по ідентифікатору  ${question_id}
-	${value}=	Get Data By Angular  questions[${index}].${field}
+	${value}=	Find And Get Data  questions[${index}].${field}
 	[Return]	${value}
 	
 ##############################################################################
@@ -451,16 +437,8 @@ Resource	alltenders_utils.robot
 	...		answer_data: 	The data of answer
 	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
 	${info}=	Create Dictionary	
-	Execute Angular Method  complaints[${index}].answer
-	Execute Javascript
-	...		angular.element('div[ng-form=pageComplaintAnswer]').scope().$apply(function(scope) {
-	...			var model = scope.model;
-	...			model.data.info = {
-	...				description: "${answer_data.data.resolution}",
-	...				type: "${answer_data.data.resolutionType}"
-	...			};
-	...			model.apply();
-	...		});
+	Call Page Event  complaints[${index}].answer
+	Execute Javascript  angular.element('div[ng-form=pageComplaintAnswer]').scope().$apply(function(scope){var model=scope.model;model.data.info={description:"${answer_data.data.resolution}",type:"${answer_data.data.resolutionType}"};model.apply();});
 	Wait For Progress Bar
 
 Завантажити документацію до вимоги
@@ -471,7 +449,7 @@ Resource	alltenders_utils.robot
 	...		complaint_id: 	The ID of complaint
 	...		document:		The document that will be uploaded
 	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
-	Upload File By Angular  ${document}  complaints[${index}].upload
+	Upload File To Object  ${document}  complaints[${index}]
 
 Отримати документ до скарги
 	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${doc_id}  ${award_id}=${None}
@@ -503,7 +481,7 @@ Resource	alltenders_utils.robot
 	...		field:			The name of field
 	...		award_id:		The ID of the award
 	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
-	${value}=	Get Data By Angular  complaints[${index}].${field}
+	${value}=	Find And Get Data  complaints[${index}].${field}
 	[Return]	${value}
 
 Перетворити вимогу про виправлення умов закупівлі в скаргу
@@ -514,8 +492,8 @@ Resource	alltenders_utils.robot
 	...		complaint_id:		The ID of the complaint
 	...		escalating_data:	The escalating data 
 	...		[Description]  Переводить вимогу у статус "pending"
-	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
-	Execute Angular Method  complaints[${index}].pending
+	${index}=  Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
+	Call Page Event  complaints[${index}].pending
 	Wait For Progress Bar
 
 Перетворити вимогу про виправлення умов лоту в скаргу
@@ -537,7 +515,7 @@ Resource	alltenders_utils.robot
 	...		confirmation_data:	The confirmation data 
 	...		[Description]  Переводить вимогу зі статусу "draft" у статус "claim"
 	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
-	Execute Angular Method  complaints[${index}].claim
+	Call Page Event  complaints[${index}].claim
 	Wait For Progress Bar
 
 Підтвердити вирішення вимоги про виправлення умов закупівлі
@@ -549,7 +527,7 @@ Resource	alltenders_utils.robot
 	...		confirmation_data:	The confirmation data 
 	...		[Description]  Переводить вимогу зі статусу "answered" у статус "resolved"
 	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
-	Execute Angular Method  complaints[${index}].resolve
+	Call Page Event  complaints[${index}].resolve
 	Wait For Progress Bar
 
 Підтвердити вирішення вимоги про виправлення умов лоту
@@ -571,14 +549,8 @@ Resource	alltenders_utils.robot
 	...		cancellation_data:	The cancelation data 
 	...		[Description]  Переводить вимогу в статус "canceled"
 	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
-	Execute Angular Method  complaints[${index}].cancel
-	Execute Javascript
-	...		angular.element('div[class="ui-dialog-content"]').scope().$apply(function(scope) {
-	...			scope.data.data = {
-	...				input: "${cancellation_data.data.cancellationReason}"
-	...			};
-	...			scope.actions.apply();
-	...		});
+	Call Page Event  complaints[${index}].cancel
+	Execute Javascript  angular.element('div[class="ui-dialog-content"]').scope().$apply(function(scope){scope.data.data={input:"${cancellation_data.data.cancellationReason}"};scope.actions.apply();});
 	Wait For Progress Bar
 
 Скасувати вимогу про виправлення умов лоту
@@ -634,7 +606,7 @@ Resource	alltenders_utils.robot
 	...		[Description]  Створює вимогу у статусі "draft".
 	...		[Return]  The complaintID
 	Оновити тендер	${username}  ${tender_uaid}
-	Execute Angular Method  complaint
+	Call Page Event  complaint
 	${complaintID}=	Створити вимогу  ${claim}
 	[Return]	${complaintID}
 
@@ -651,10 +623,10 @@ Resource	alltenders_utils.robot
 	Run Keyword And Return If  '${lot_id}' == '${None}'
 	...		alltenders.Створити чернетку вимоги про виправлення умов закупівлі  ${username}  ${tender_uaid}  ${claim}
 	Оновити тендер	${username}  ${tender_uaid}
-	${index}=		Знайти індекс лота по ідентифікатору  ${lot_id}
-	${relatedLot}=	Get Data By Angular  lots[${lot_index}].id
+	${index}=	Знайти індекс лота по ідентифікатору  ${lot_id}
+	${relatedLot}=	Find And Get Data  lots[${lot_index}].id
 	Set to dictionary  ${claim.data}  relatedLot=${relatedLot}
-	Execute Angular Method  lots[${lot_index}].complaint
+	Call Page Event  lots[${lot_index}].complaint
 	${complaintID}=	Створити вимогу  ${claim}
 	[Return]	${complaintID}
 
@@ -671,11 +643,9 @@ Resource	alltenders_utils.robot
 	Оновити тендер						${username}  		${tender_uaid}
 	Wait and Click Link					${tender.menu.bids}
 	Wait Until Page Contains Element	${tender.form.bid}	${common.wait}
-	${tender}=  		Get Data By Angular
-	${tender_file}=		extract_file_name  ${filepath}
-	Log Object Data  ${tender}  ${tender_file}  json
+	${data}=  Find And Get Data
+	${tender_file}=  extract_file_name  ${filepath}
 	Upload File							${filepath}			${tender.form.bid.menu.uploadFile}
-	Run Keyword And Return				Munchify Data By Angular		object_path=bids.documents
 
 Змінити документ в ставці
 	[Arguments]		${username}  ${tender_uaid}  ${filepath}   ${docid}
@@ -687,7 +657,6 @@ Resource	alltenders_utils.robot
 	Оновити тендер			${username}  ${tender_uaid}
 	Wait and Click Element	${tender.menu.bids}
 	Upload File		${filepath}		${tender.form.bid.menu.uploadFile}	upload_locator=${tender.changeFile}
-	Run Keyword And Return	Munchify Data By Angular  object_path=bids.documents
 
 Змінити документацію в ставці
 	[Arguments]		${username}  ${tender_uaid}  ${doc_data}   ${docid}
@@ -698,11 +667,8 @@ Resource	alltenders_utils.robot
 	...		docid:		The ID document
 	Оновити тендер			${username}  ${tender_uaid}
 	Wait and Click Element  ${tender.menu.bids}
-	Execute Angular Method  upload  bids
+	Call Page Event  upload  bids
 	${data}=	Object To Json  ${doc_data}
-#	${data}=	Get Data By Angular			docuemnts	bids
-#	${index}=	Find Document Index By Id	${data}		${doc_id}
-#	${document}=	Find Document By Id		${tender}  ${doc_id}
 	Execute Javascript
 	...		angular.element('files > div').scope().$apply(function(scope) {
 	...			var data = ${data}, files = scope.ctrl._files, i = 0, file, title, key;
@@ -725,12 +691,12 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		field:			The name of field
 	...		value:			The value to be set
-	Оновити тендер			${username}  ${tender_uaid}
-	Wait and Click Element	${tender.menu.bids}
-	Set Object By Angular	${field}	${value}	bids
-	Execute Angular Method	save  bids
+	Оновити тендер  ${username}  ${tender_uaid}
+	Wait and Click Element  ${tender.menu.bids}
+	Try To Set Object  ${field}	${value}	bids
+	Call Page Event  save  bids
 	Wait For Progress Bar
-	Execute Angular Method	_activate  bids
+	Call Page Event  _activate  bids
 	${status}=	Run Keyword And Return Status  Page Should Contain Element  ${dialog}
 	Run Keyword If  ${status}  Підтвердити дію в діалозі
 	Capture Page Screenshot
@@ -744,9 +710,8 @@ Resource	alltenders_utils.robot
 	Оновити тендер			${username}  ${tender_uaid}
 	Wait and Click Element	${tender.menu.bids}
 	Capture Page Screenshot
-	${value}=	Get Data By Angular  ${field}  bids
-	${value}=	Run Keyword If  '${value}' == '${None}'  Set Variable	${value}
-	...			ELSE IF  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
+	${value}=	Find And Get Data  ${field}  bids
+	${value}=	Run Keyword If  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
 	...			ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')} or ${field.endswith('latitude')} or ${field.endswith('longitude')}  Convert To Number  ${value} 
 	...			ELSE	Set Variable	${value}
 	[Return]	${value}
@@ -758,7 +723,7 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		lot_index:		Index of lot (default 0)
 	Оновити тендер			${username}		${tender_uaid}
-	Run Keyword And Return  Get Data By Angular  _lots[${lot_index}].auctionUrl
+	Run Keyword And Return  Find And Get Data  _lots[${lot_index}].auctionUrl
 
 Подати цінову пропозицію
 	[Arguments]		${username}  ${tender_uaid}  ${bid}  ${lots_ids}=${None}  ${features_ids}=${None}
@@ -768,16 +733,17 @@ Resource	alltenders_utils.robot
 	...		bid:			The data to be set
 	...		lots_ids:		The IDs of lots
 	Оновити тендер	${username}  ${tender_uaid}
-	${tender}=		Munchify Data By Angular
-	${contact}=		Get From Dictionary		 ${bid.data.tenderers[0]}	contactPoint
-	${features}=	Get From Dictionary	${bid.data}  parameters
-	${values}=		Create List
+	${data}=  Find And Get Data
+	${data}=  Create Safe Dictionary  ${data}
+	${contact}=  Get From Dictionary   ${bid.data.tenderers[0]}  contactPoint
+	${features}=  Get From Dictionary  ${bid.data}  parameters
+	${values}=  Create List
 	#	--- fill lots info ---
 	${lots_ids}=	Run Keyword If  ${lots_ids}  Set Variable  ${lots_ids}
 	...		ELSE  Create List
 	:FOR  ${index}  ${lot_id}  IN ENUMERATE  @{lots_ids}
-	\	${lot_index}=	Find Index By Id	${tender.lots}  ${lot_id}
-	\	${lot_id}=		Get Variable Value	${tender.lots[${lot_index}].id}
+	\	${lot_index}=	Find Index By Id	${data.lots}  ${lot_id}
+	\	${lot_id}=		Get Variable Value	${data.lots[${lot_index}].id}
 	\	Set To Dictionary	${bid.data.lotValues[${index}]}  relatedLot=${lot_id}
 	\	${value}=		Create Dictionary  id=${lot_id}  value=${bid.data.lotValues[${index}].value.amount}
 	\	Append To List	${values}  ${value}
@@ -785,17 +751,16 @@ Resource	alltenders_utils.robot
 	${features_ids}=		Run Keyword If  ${features_ids}  Set Variable  ${features_ids}
 	...		ELSE  Create List
 	:FOR  ${index}  ${feature_id}  IN ENUMERATE  @{features_ids}
-	\	${feature_index}=	Find Index By Id	${tender.features}  ${feature_id}
-	\	${code}=			Get Variable Value	${tender.features[${feature_index}].code}
+	\	${feature_index}=	Find Index By Id	${data.features}  ${feature_id}
+	\	${code}=			Get Variable Value	${data.features[${feature_index}].code}
 	\	Set To Dictionary	${bid.data.parameters[${index}]}  code=${code}
-	${data}=		Create Dictionary	contact=${contact}  features=${features}  value=${values}
-	${data}=		Object To Json		${data}
+	${data}=  Create Dictionary	contact=${contact}  features=${features}  value=${values}
+	${data}=  Object To Json  ${data}
 	Execute Javascript	angular.element('body').scope().$apply(function(scope){scope.context.tender._lots[0]._makeBid(${data});});
 	Wait For Progress Bar
-	Execute Angular Method	_activate  bids
+	Call Page Event  _activate  bids
 	Підтвердити дію в діалозі
 	Capture Page Screenshot
-	Run Keyword And Return				Munchify Data By Angular			object_path=bids
 
 Подати цінову пропозицію на лоти
     [Arguments]    ${username}  ${tender_uaid}  ${bid}  ${lots_ids}
@@ -813,10 +778,9 @@ Resource	alltenders_utils.robot
 	[Documentation]
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
-	Оновити тендер			${username}  		${tender_uaid}
-	Execute Angular Method	delete  bids
+	Оновити тендер  ${username}  ${tender_uaid}
+	Call Page Event  delete  bids
 	Підтвердити дію в діалозі
-	Run Keyword And Return  Munchify Data By Angular  object_path=bids
 
 ##############################################################################
 #             Document operations
@@ -1025,11 +989,11 @@ Resource	alltenders_utils.robot
 	...		[Description] Find tender using uaid, get contract test_confirmation data and call patch_contract
 	...		[Return] Nothing
 	Оновити тендер	${username}		${tender_uaid}
-	${endDate}=		Get Data By Angular	awards[0].complaintPeriod.endDate
-	${sleep}=		Wait To Date	${endDate}
+	${endDate}=  Find And Get Data  awards[0].complaintPeriod.endDate
+	${sleep}=    Wait To Date  ${endDate}
 	Run Keyword If  ${sleep} > 0	Fail  Неможливо укласти угоду для переговорної процедури поки не пройде stand-still період
-	Wait and Click Element			${tender.menu.contracts}
-	Run Keyword And Ignore Error  Set Data By Angular  _contract._clone.contractNumber  ${contract_num}
+	Wait and Click Element  ${tender.menu.contracts}
+	Run Keyword And Ignore Error  Try To Set Data  _contract._clone.contractNumber  ${contract_num}
 	Execute Javascript  angular.element('body').scope().$apply(function(scope){scope.context.tender._contract.activate(true);});
 	Підтвердити дію в діалозі
 
@@ -1055,10 +1019,10 @@ Resource	alltenders_utils.robot
 	...		[Description] Find tender using uaid, create data dict with active status and call patch_qualification
 	...		[Return] Reply of API
 	Оновити тендер	${username}		${tender_uaid}
-	${tender}=  Get Data By Angular
-	Log Object Data  ${tender}  activate_qualification_${qualification_num}  json
+	${data}=  Find And Get Data
+	Log Object Data  ${data}  activate_qualification_${qualification_num}  json
 	${index}=	Get Qualification Index  ${qualification_num}
-	Execute Angular Method  _qualifications[${index}].activate
+	Call Page Event  _qualifications[${index}].activate
 	Підтвердити дію в діалозі
 
 Відхилити кваліфікацію
@@ -1070,10 +1034,10 @@ Resource	alltenders_utils.robot
 	...		[Description] Find tender using uaid, create data dict with unsuccessful status and call patch_qualification
 	...		[Return] Reply of API
 	Оновити тендер	${username}		${tender_uaid}
-	${tender}=  Get Data By Angular
-	Log Object Data  ${tender}  reject_qualification_${qualification_num}  json
+	${data}=  Find And Get Data
+	Log Object Data  ${data}  reject_qualification_${qualification_num}  json
 	${index}=	Get Qualification Index  ${qualification_num}
-	Execute Angular Method  _qualifications[${index}].reject
+	Call Page Event  _qualifications[${index}].reject
 	Підтвердити дію в діалозі
 
 Завантажити документ у кваліфікацію
@@ -1086,10 +1050,10 @@ Resource	alltenders_utils.robot
 	...		[Description] Find tender using uaid,  and call upload_qualification_document
 	...		[Return] Reply of API
 	Оновити тендер	${username}		${tender_uaid}
-	${index}=		Get Qualification Index  ${qualification_num}
-	${read_only}=	Get Data By Angular		_qualifications[${index}].$behavior.upload_readonly
-	Should Not Be True		${read_only}
-	Upload File By Angular	${document}  	_qualifications[${index}].upload
+	${index}=  Get Qualification Index  ${qualification_num}
+	${read_only}=  Find And Get Data  _qualifications[${index}].$behavior.upload_readonly
+	Should Not Be True  ${read_only}
+	Upload File To Object  ${document}  _qualifications[${index}]
 
 Скасувати кваліфікацію
 	[Arguments]		${username}  ${tender_uaid}  ${qualification_num}
@@ -1100,10 +1064,10 @@ Resource	alltenders_utils.robot
 	...		[Description] Find tender using uaid, create data dict with cancelled status and call patch_qualification
 	...		[Return] Reply of API
 	Оновити тендер	${username}		${tender_uaid}
-	${tender}=  Get Data By Angular
-	Log Object Data  ${tender}  cancel_qualification_${qualification_num}  json
+	${data}=  Find And Get Data
+	Log Object Data  ${data}  cancel_qualification_${qualification_num}  json
 	${index}=	Get Qualification Index  ${qualification_num}
-	Execute Angular Method  _qualifications[${index}].cancel
+	Call Page Event  _qualifications[${index}].cancel
 	Capture Page Screenshot
 	Підтвердити дію в діалозі
 	Capture Page Screenshot
