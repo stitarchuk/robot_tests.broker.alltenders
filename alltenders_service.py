@@ -133,6 +133,9 @@ def find_index_by_id(data, object_id):
         index = -1
     return index
 
+def is_none(data=None):
+    return (not data) or (data is None) or (data == 'None')
+
 def iso_date_to_ua(isodate):
     return convert_iso_datetime(isodate, "%d.%m.%Y")
 

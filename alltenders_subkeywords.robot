@@ -244,13 +244,15 @@ Resource	alltenders_utils.robot
 	alltenders.Пошук тендера по ідентифікатору	${username}  ${tender_uaid}  ${False}
 
 Конвертувати дані зі строки
-	[Arguments]		${fieldname}  ${value}
+	[Arguments]		${field}  ${value}
 	[Documentation]
-	...		fieldname:	The name of field
-	...		value:		The value of field
-	${parsed}=  Run Keyword If  '${fieldname}' == 'value.valueAddedTaxIncluded'  Convert To Boolean  ${value}	
-	...		ELSE IF  '${field}' == 'minimalStep.amount' or '${field}' == 'value.amount' or '${field}' == 'items[0].deliveryLocation.latitude' or '${field}' == 'items[0].deliveryLocation.longitude' or '${field}' == 'items[0].quantity'  Convert To Number  ${value.split(' ')[0]}
-	...		ELSE IF  '${fieldname}' == 'tenderPeriod.endDate' or '${fieldname}' == 'tenderPeriod.startDate' or '${fieldname}' == 'enquiryPeriod.endDate' or '${fieldname}' == 'enquiryPeriod.startDate' or '${fieldname}' == 'items[0].deliveryDate.endDate' or '${fieldname}' == 'items[0].deliveryDate.startDate' or '${fieldname}' == 'questions[0].date'  ua_date_to_iso  ${value}
+	...		field:	The name of field
+	...		value:	The value of field
+	${isNone}=  Is None  ${value}
+	${parsed}=	Run Keyword If  ${isNone}  Set Variable	${value}
+	...		ELSE IF  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
+	...		ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')} or ${field.endswith('latitude')} or ${field.endswith('longitude')}  Convert To Number  ${value}
+#	...		ELSE IF  ${field.endswith('date')} or ${field.endswith('startDate')} or ${field.endswith('endDate')} or ${field.endswith('longitude')}  Convert To Date  ${value}
 	...		ELSE	Set Variable	${value}
 	[Return]	${parsed}
 
@@ -277,9 +279,8 @@ Resource	alltenders_utils.robot
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
 	...		complaint_id:	The ID of the complaint
-	alltenders.Оновити сторінку з тендером  ${username}  ${tender_uaid}
-	Wait and Click Element		${tender.menu.complaints}
-	Run Keyword And Return		Знайти індекс скарги по ідентифікатору  ${complaint_id}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.complaints}
+	Run Keyword And Return  Знайти індекс скарги по ідентифікатору  ${complaint_id}
 
 Підтвердити дію в діалозі
 	[Arguments]		${timeout}=${common.wait}
@@ -295,11 +296,12 @@ Resource	alltenders_utils.robot
 	[Documentation]
 	...		claim:		The complaint that must be created
 	...		[Return]	The complaintID
-	${title}=			Get From Dictionary		${claim.data}	title
-	${description}=		Get From Dictionary		${claim.data}	description
+	${title}=        Get From Dictionary  ${claim.data}  title
+	${description}=  Get From Dictionary  ${claim.data}  description
 	Wait Until Page Contains Element	${tender.complaint.form}				${common.wait}
 	Wait and Input Text					${tender.complaint.form.title}			${title}
 	Wait and Input Text					${tender.complaint.form.description}	${description}
+	Capture Page Screenshot
 	Wait and Click Button				${tender.complaint.form.make}
 	Capture Page Screenshot
 	Wait For Progress Bar

@@ -14,7 +14,7 @@ Resource	alltenders_utils.robot
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
 	...		lot_index:		Index of lot (default 0)
-	Оновити тендер			${username}		${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	Run Keyword And Return  Find And Get Data  _lots[${lot_index}].auctionUrl
 
 Підготувати клієнт для користувача
@@ -37,8 +37,8 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		field_name:		The name of field to be edit
 	...		field_data:		The name of data to be input
-	Оновити тендер	${username}  ${tender_uaid}
-	${reply}=	Run Keyword  Змінити поле ${field_name}  ${field_data}
+	Reload Tender And Switch Card By Field  ${username}  ${tender_uaid}  ${field_name}
+	${reply}=  Run Keyword  Змінити поле ${field_name}  ${field_data}
 	Save Tender
 	[Return]	${reply}
 
@@ -50,26 +50,17 @@ Resource	alltenders_utils.robot
 	Switch Browser  ${username}
 	Run Keyword If  '${username}' == '${viewer}'  Go To  ${USERS.users['${username}'].homepage}  ELSE  Reload Angular Page
 	${tenderID}=  Find And Get Data  tenderID
-	#	--- check if page contains the tender --- 
-	Run Keyword If  '${tenderID}' != '${tender_uaid}'
-	...		Знайти тендер по ідентифікатору  ${username}  ${tender_uaid}
-
+	Run Keyword If  '${tenderID}' != '${tender_uaid}'  Знайти тендер по ідентифікатору  ${username}  ${tender_uaid}
+	
 Отримати інформацію із тендера
 	[Arguments]		${username}  ${tender_uaid}  ${field}
 	[Documentation]
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
 	...		field:			The name of field
-	Оновити тендер  ${username}  ${tender_uaid}
-	${locator}=		Set Variable If  'questions' in '${field}'		${tender.menu.questions}
-	...								'bids' in '${field}'			${tender.menu.bids}
-	...								${tender.menu.description}
-	Wait and Click Element		${locator}
+	Reload Tender And Switch Card By Field  ${username}  ${tender_uaid}  ${field}
 	${value}=	Run Keyword If	'${field}' == 'status'	Call Page Event  getStatus  ELSE  Find And Get Data  ${field}
-	${value}=	Run Keyword If  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
-	...			ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')} or ${field.endswith('latitude')} or ${field.endswith('longitude')}  Convert To Number  ${value} 
-	...			ELSE	Set Variable	${value}
-	[Return]	${value}
+	Run Keyword And Return  Конвертувати дані зі строки  ${field}  ${value}
 
 Підготувати дані для оголошення тендера
 	[Arguments]		${username}  ${initial_data}  ${role_name}=tender_owner
@@ -158,7 +149,7 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		item_id:		The ID of item to be removed
 	...		lot_id:			The ID of lot wich item to be removed
-	Оновити тендер	${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${index}=  Знайти індекс предмета по ідентифікатору	${item_id}
 	Call Page Event  items[${index}].delete
 	Підтвердити дію в діалозі
@@ -170,7 +161,7 @@ Resource	alltenders_utils.robot
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
 	...		item:			The item's data
-	Оновити тендер	${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	Додати предмет	${item}
 	Save Tender		${tender_uaid}
 	
@@ -181,13 +172,10 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		item_id:		The ID of item
 	...		field:			The name of field
-	Оновити тендер	${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${index}=	Знайти індекс предмета по ідентифікатору  ${item_id}
 	${value}=	Find And Get Data  items[${index}].${field}
-	${value}=	Run Keyword If  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
-	...			ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')} or ${field.endswith('latitude')} or ${field.endswith('longitude')}  Convert To Number  ${value} 
-	...			ELSE	Set Variable	${value}
-	[Return]	${value}
+	Run Keyword And Return  Конвертувати дані зі строки  ${field}  ${value}
 
 ##############################################################################
 #             Lot operations
@@ -199,7 +187,7 @@ Resource	alltenders_utils.robot
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
 	...		lot_id:			The ID of lot to be removed
-	Оновити тендер	${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${index}=	Знайти індекс лота по ідентифікатору	${lot_id}
 	${count}=	Find And Get Data  lots[${index}]._items.length
 	:FOR  ${idx}  IN RANGE  ${count}  0  -1
@@ -216,7 +204,7 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		lot_id:			The ID of lot
 	...		item:			The item's data
-	Оновити тендер	${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${index}=	Знайти індекс лота по ідентифікатору  ${lot_id}
 	${lot_id}=	Find And Get Data  lots[${index}].id
 	Set To Dictionary  	${item}  relatedLot=${lot_id}
@@ -229,7 +217,7 @@ Resource	alltenders_utils.robot
 	...		username:		The name of user
 	...		filepath:		The path to file that will be uploaded
 	...		tender_uaid:	The UA ID of the tender
-	Оновити тендер	${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${index}=		Знайти індекс лота по ідентифікатору	${lot_id}
 	${idxs}=		Create List		${index}
 	${btn_locator}=	Build Xpath 	${tender.form.lot.menu.uploadFile}	@{idxs}
@@ -243,7 +231,7 @@ Resource	alltenders_utils.robot
 	...		lot_id:			The ID of lot 
 	...		field:			The name of field
 	...		value:			The value to be set
-	Оновити тендер	${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${index}=  Знайти індекс лота по ідентифікатору	${lot_id}
 	${value}=  Set Variable If  ${field.endswith('valueAddedTaxIncluded')} or ${field.endswith('amount')} or ${field.endswith('quantity')}  ${value}  "${value}"
 	Try To Set Data  lots[${index}].${field}  ${value}
@@ -256,13 +244,10 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		lot_id:			The ID of lot 
 	...		field:			The name of field
-	Оновити тендер	${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${index}=	Знайти індекс лота по ідентифікатору  ${lot_id}
 	${value}=	Find And Get Data  lots[${index}].${field}
-	${value}=	Run Keyword If  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
-	...			ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')}  Convert To Number  ${value} 
-	...			ELSE	Set Variable  ${value}
-	[Return]	${value}
+	Run Keyword And Return  Конвертувати дані зі строки  ${field}  ${value}
 	
 Скасувати лот
   [Arguments]		${username}  ${tender_uaid}  ${lot_id}  ${cancellation_reason}  ${document}  ${new_description}
@@ -274,8 +259,8 @@ Resource	alltenders_utils.robot
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
 	...		lot:			The data of lot to be create
-	Оновити тендер	${username}	${tender_uaid}
-	${index}=		Додати лот	${lot.data}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
+	${index}=  Додати лот	${lot.data}
 	Save Tender
 
 Створити лот із предметом закупівлі
@@ -285,7 +270,7 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		lot:			The data of lot to be create
 	...		item:			The data of item to be add
-	Оновити тендер	${username}	${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${index}=	Додати лот  ${lot.data}
 	${lot_id}=	Find And Get Data  lots[${index}].id
 	Set To Dictionary  ${item}  relatedLot=${lot_id}
@@ -302,7 +287,7 @@ Resource	alltenders_utils.robot
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
 	...		feature_id:		The ID of feature
-  	Оновити тендер	${username}		${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${index}=  Знайти індекс нецінового показника по ідентифікатору  ${feature_id}
 	Call Page Event  features[${index}].delete
 	Підтвердити дію в діалозі
@@ -315,7 +300,7 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		feature:		The feature data
 	...		lot_id:			The ID of the lot
-	Оновити тендер	${username}		${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	Змінити неціновий показник на лот	${feature}		${lot_id}
 
 Додати неціновий показник на предмет
@@ -325,7 +310,7 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		feature:		The feature data
 	...		item_id:		The ID of the item
-	Оновити тендер	${username}		${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	Змінити неціновий показник на предмет	${feature}		${item_id}
 
 Додати неціновий показник на тендер
@@ -334,17 +319,15 @@ Resource	alltenders_utils.robot
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
 	...		feature:		The feature data
-	Оновити тендер	${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	Змінити неціновий показник на тендер	${feature}
 	
 Отримати інформацію із нецінового показника
 	[Arguments]		${username}  ${tender_uaid}  ${feature_id}  ${field}
-	Оновити тендер	${username}  ${tender_uaid}
-	${index}=	Знайти індекс нецінового показника по ідентифікатору  ${feature_id}
-	${value}=	Find And Get Data  features[${index}].${field}
-	${value}=	Run Keyword If  ${field.endswith('value')}  Convert To Number  ${value} 
-	...			ELSE  Set Variable  ${value}
-	[Return]	${value}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
+	${index}=  Знайти індекс нецінового показника по ідентифікатору  ${feature_id}
+	${value}=  Find And Get Data  features[${index}].${field}
+	Run Keyword And Return  Конвертувати дані зі строки  ${field}  ${value}
 
 ##############################################################################
 #             Questions
@@ -358,11 +341,10 @@ Resource	alltenders_utils.robot
 	...		question_resp:	The question that must be asked 
 	...		answer:			The question answer 
 	...		question_id:	The question's ID
-	Оновити тендер			${username}  ${tender_uaid}
-	Wait and Click Link		${tender.menu.questions}
-	${answer}=				Get From Dictionary  ${answer.data}  answer
-	${index}=				Знайти індекс запитання по ідентифікатору  ${question_id}
-	Answer Question  		${index}  ${answer}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.questions}
+	${answer}=  Get From Dictionary  ${answer.data}  answer
+	${index}=   Знайти індекс запитання по ідентифікатору  ${question_id}
+	Answer Question		${index}  ${answer}
 	Wait Until Page Contains Element  ${tender.questions.form.grid}  ${common.wait}
 	Reload Angular Page
 	Capture Page Screenshot
@@ -374,7 +356,7 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		lot_id:			The ID of lot 
 	...		question:		The question that must be asked 
-	Оновити тендер	${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${lot_index}=	Знайти індекс лота по ідентифікатору	${lot_id}
 	${idxs}=		Create List		${lot_index}
 	${btn_locator}=	Build Xpath 	${tender.form.lot.menu.question}	@{idxs}
@@ -387,7 +369,7 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		lot_id:			The ID of lot 
 	...		question:		The question that must be asked 
-	Оновити тендер	${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${item_index}=	Знайти індекс предмета по ідентифікатору	${item_id}
 	${idxs}=		Create List		0  ${item_index}
 	${btn_locator}=	Build Xpath 	${tender.form.item.menu.question}	@{idxs}
@@ -399,7 +381,7 @@ Resource	alltenders_utils.robot
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
 	...		question:		The question that must be asked 
-	Оновити тендер	${username}		${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	Run Keyword And Return	Ask Question	${question}		${tender.form.menu.question}
 
 Отримати інформацію із запитання
@@ -409,8 +391,7 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		question_id:	The question's ID 
 	...		field:			The name of field
-	Оновити тендер  ${username}  ${tender_uaid}
-	Wait and Click Link  ${tender.menu.questions}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.questions}
 	${index}=	Знайти індекс запитання по ідентифікатору  ${question_id}
 	${value}=	Find And Get Data  questions[${index}].${field}
 	[Return]	${value}
@@ -435,8 +416,8 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		complaint_id:	The ID of the complaint
 	...		answer_data: 	The data of answer
-	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
-	${info}=	Create Dictionary	
+	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}
+	${info}=  Create Dictionary	
 	Call Page Event  complaints[${index}].answer
 	Execute Javascript  angular.element('div[ng-form=pageComplaintAnswer]').scope().$apply(function(scope){var model=scope.model;model.data.info={description:"${answer_data.data.resolution}",type:"${answer_data.data.resolutionType}"};model.apply();});
 	Wait For Progress Bar
@@ -480,8 +461,8 @@ Resource	alltenders_utils.robot
 	...		complaint_id:	The ID of the complaint
 	...		field:			The name of field
 	...		award_id:		The ID of the award
-	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
-	${value}=	Find And Get Data  complaints[${index}].${field}
+	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}
+	${value}=  Find And Get Data  complaints[${index}].${field}
 	[Return]	${value}
 
 Перетворити вимогу про виправлення умов закупівлі в скаргу
@@ -492,7 +473,7 @@ Resource	alltenders_utils.robot
 	...		complaint_id:		The ID of the complaint
 	...		escalating_data:	The escalating data 
 	...		[Description]  Переводить вимогу у статус "pending"
-	${index}=  Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
+	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}
 	Call Page Event  complaints[${index}].pending
 	Wait For Progress Bar
 
@@ -514,7 +495,7 @@ Resource	alltenders_utils.robot
 	...		complaint_id:		The ID of the complaint
 	...		confirmation_data:	The confirmation data 
 	...		[Description]  Переводить вимогу зі статусу "draft" у статус "claim"
-	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
+	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}
 	Call Page Event  complaints[${index}].claim
 	Wait For Progress Bar
 
@@ -526,7 +507,7 @@ Resource	alltenders_utils.robot
 	...		complaint_id:		The ID of the complaint
 	...		confirmation_data:	The confirmation data 
 	...		[Description]  Переводить вимогу зі статусу "answered" у статус "resolved"
-	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
+	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}
 	Call Page Event  complaints[${index}].resolve
 	Wait For Progress Bar
 
@@ -548,7 +529,7 @@ Resource	alltenders_utils.robot
 	...		complaint_id:		The ID of the complaint
 	...		cancellation_data:	The cancelation data 
 	...		[Description]  Переводить вимогу в статус "canceled"
-	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
+	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}
 	Call Page Event  complaints[${index}].cancel
 	Execute Javascript  angular.element('div[class="ui-dialog-content"]').scope().$apply(function(scope){scope.data.data={input:"${cancellation_data.data.cancellationReason}"};scope.actions.apply();});
 	Wait For Progress Bar
@@ -572,8 +553,8 @@ Resource	alltenders_utils.robot
 	...		document:		The the document that will be uploaded
 	...		[Description]  Створює вимогу у статусі "claim". Можна створити вимогу як з документацією, так і без неї.
 	...		[Return]  The complaintID
-	${complaintID}=	alltenders.Створити чернетку вимоги про виправлення умов закупівлі  ${username}  ${tender_uaid}  ${claim}
-	${status}=		Run Keyword And Return Status  Should Not Be Equal  ${document}  ${None}
+	${complaintID}=  alltenders.Створити чернетку вимоги про виправлення умов закупівлі  ${username}  ${tender_uaid}  ${claim}
+	${status}=  Run Keyword And Return Status  Should Not Be Equal  ${document}  ${None}
 	Run keyword If  ${status} == ${True}
 	...				alltenders.Завантажити документацію до вимоги  ${username}  ${tender_uaid}  ${complaintID}  ${document}
 	alltenders.Подати вимогу  ${username}  ${tender_uaid}  ${complaintID}  ${None}
@@ -590,8 +571,8 @@ Resource	alltenders_utils.robot
 	...		[Description]  Створює вимогу у статусі "claim". Можна створити вимогу як з документацією, так і без неї.
 	...		Якщо lot_index == None, то створюється вимога про виправлення умов тендера.
 	...		[Return]  The complaintID
-	${complaintID}=	alltenders.Створити чернетку вимоги про виправлення умов лоту  ${username}  ${tender_uaid}  ${claim}  ${lot_id}
-	${status}=		Run Keyword And Return Status  Should Not Be Equal  ${document}  ${None}
+	${complaintID}=  alltenders.Створити чернетку вимоги про виправлення умов лоту  ${username}  ${tender_uaid}  ${claim}  ${lot_id}
+	${status}=  Run Keyword And Return Status  Should Not Be Equal  ${document}  ${None}
 	Run keyword If  ${status} == ${True}
 	...				alltenders.Завантажити документацію до вимоги  ${username}  ${tender_uaid}  ${complaintID}  ${document}
 	alltenders.Подати вимогу  ${username}  ${tender_uaid}  ${complaintID}  ${None}
@@ -607,7 +588,7 @@ Resource	alltenders_utils.robot
 	...		[Return]  The complaintID
 	Оновити тендер	${username}  ${tender_uaid}
 	Call Page Event  complaint
-	${complaintID}=	Створити вимогу  ${claim}
+	${complaintID}=  Створити вимогу  ${claim}
 	[Return]	${complaintID}
 
 Створити чернетку вимоги про виправлення умов лоту
@@ -707,14 +688,9 @@ Resource	alltenders_utils.robot
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
 	...		field:			The name of field
-	Оновити тендер			${username}  ${tender_uaid}
-	Wait and Click Element	${tender.menu.bids}
-	Capture Page Screenshot
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.bids}
 	${value}=	Find And Get Data  ${field}  bids
-	${value}=	Run Keyword If  ${field.endswith('valueAddedTaxIncluded')}  Convert To Boolean  ${value}
-	...			ELSE IF  ${field.endswith('amount')} or ${field.endswith('quantity')} or ${field.endswith('latitude')} or ${field.endswith('longitude')}  Convert To Number  ${value} 
-	...			ELSE	Set Variable	${value}
-	[Return]	${value}
+	Run Keyword And Return  Конвертувати дані зі строки  ${field}  ${value}
   
 Отримати посилання на аукціон для учасника
 	[Arguments]		${username}	${tender_uaid}  ${lot_index}=${0}
@@ -825,8 +801,8 @@ Resource	alltenders_utils.robot
 	...		doc_id:			The ID of the document
 	...		field:			The name of field
 	Оновити тендер	${username}  ${tender_uaid}
-	${document}=	Знайти документ по ідентифікатору	${doc_id}
-	${value}=		Get From Dictionary		${document}	${field}
+	${document}=  Знайти документ по ідентифікатору  ${doc_id}
+	${value}=     Get From Dictionary  ${document}  ${field}
 	[Return]	${value}
 
 ##############################################################################

@@ -96,6 +96,30 @@ Reload Angular Page
 	Reload Page
 	Wait For Angular	${timeout}
 
+Reload Tender And Switch Card
+	[Arguments]		${username}  ${tender_uaid}  ${locator}=${tender.menu.description}
+	[Documentation]
+	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		locator:		The locator to switch
+	Оновити тендер  ${username}  ${tender_uaid}
+	Wait and Click Element  ${locator}
+	Capture Page Screenshot
+	[Return]	${locator}
+
+Reload Tender And Switch Card By Field
+	[Arguments]		${username}  ${tender_uaid}  ${field}
+	[Documentation]
+	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		field:			The name of field
+	${locator}=  Set Variable If  'questions' in '${field}'  ${tender.menu.questions}
+	...		'bids' in '${field}'  ${tender.menu.bids}
+	...		'awards' in '${field}'  ${tender.menu.awards}
+	...		${tender.menu.description}
+	${locator}=  Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${locator}
+	[Return]	${locator}
+
 Save Tender
 	[Arguments]		${locator}=${tender.form}  ${send}=${False}
 	${timeout}=		Set Variable	${240}
