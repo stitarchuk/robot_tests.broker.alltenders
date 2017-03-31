@@ -14,7 +14,7 @@ import urllib
 
 def get_qualification_index(index):
     return abs(int(index))
-    
+
 def build_xpath(path, *idx):
     idx = tuple(int(i) + 1 for i in idx)
     return 'xpath=' + path.replace('xpath=', '').format(*idx)
@@ -28,11 +28,18 @@ def build_xpath_old(*items):
         xpath = '({0}{1})[{2}]'.format(xpath, item['path'].replace('xpath=', ''), int(item['idx']))
     return 'xpath=' + xpath
 
-def build_xpath_for_parent(parent_path, parent_idx, *items):
-    return build_xpath_old({ 'path': parent_path, 'idx': parent_idx }, *items)
-
 def build_xpath_for_child(parent_path, parent_idx, child_path, child_idx):
     return build_xpath_for_parent(parent_path, parent_idx, { 'path': child_path, 'idx': child_idx })
+
+def build_path_for_data(path, prefix=None):
+     if prefix is None: 
+         prefix = 'tender'
+     if path is None:
+         return prefix
+     return '{0}.{1}'.format(prefix, path) 
+
+def build_xpath_for_parent(parent_path, parent_idx, *items):
+    return build_xpath_old({ 'path': parent_path, 'idx': parent_idx }, *items)
 
 def convert_iso_datetime(isodate, pattern="%d.%m.%Y %H:%M"):
     iso_dt = parse_date(isodate)
@@ -126,14 +133,15 @@ def find_index_by_id(data, object_id):
         index = -1
     return index
 
+def is_none(data=None):
+    return (not data) or (data is None) or (data == 'None')
+
 def iso_date_to_ua(isodate):
     return convert_iso_datetime(isodate, "%d.%m.%Y")
 
-def munchify_dictionary(arg=None, data=False):
+def create_safe_dictionary(arg=None):
     if arg is None:
         arg = {}
-    if data:
-        arg = { 'data': arg }
     return munch.munchify(arg)
 
 def object_to_json(data):
