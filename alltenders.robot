@@ -586,7 +586,7 @@ Resource	alltenders_utils.robot
 	...		claim:			The complaint that must be created
 	...		[Description]  Створює вимогу у статусі "draft".
 	...		[Return]  The complaintID
-	Оновити тендер	${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	Call Page Event  complaint
 	${complaintID}=  Створити вимогу  ${claim}
 	[Return]	${complaintID}
@@ -621,12 +621,9 @@ Resource	alltenders_utils.robot
 	...		username:		The name of user
 	...		filepath:		The path to file that will be uploaded
 	...		tender_uaid:	The UA ID of the tender
-	Оновити тендер						${username}  		${tender_uaid}
-	Wait and Click Link					${tender.menu.bids}
-	Wait Until Page Contains Element	${tender.form.bid}	${common.wait}
-	${data}=  Find And Get Data
-	${tender_file}=  extract_file_name  ${filepath}
-	Upload File							${filepath}			${tender.form.bid.menu.uploadFile}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.bids}
+	Wait Until Page Contains Element  ${tender.form.bid}  ${common.wait}
+	Upload File  ${filepath}  ${tender.form.bid.menu.uploadFile}
 
 Змінити документ в ставці
 	[Arguments]		${username}  ${tender_uaid}  ${filepath}   ${docid}
@@ -635,9 +632,8 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		filepath:	The path to file that will be uploaded
 	...		docid:		The ID document
-	Оновити тендер			${username}  ${tender_uaid}
-	Wait and Click Element	${tender.menu.bids}
-	Upload File		${filepath}		${tender.form.bid.menu.uploadFile}	upload_locator=${tender.changeFile}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.bids}
+	Upload File  ${filepath}  ${tender.form.bid.menu.uploadFile}  upload_locator=${tender.changeFile}
 
 Змінити документацію в ставці
 	[Arguments]		${username}  ${tender_uaid}  ${doc_data}   ${docid}
@@ -646,8 +642,7 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		doc_data:	The path to file that will be uploaded
 	...		docid:		The ID document
-	Оновити тендер			${username}  ${tender_uaid}
-	Wait and Click Element  ${tender.menu.bids}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.bids}
 	Call Page Event  upload  bids
 	${data}=	Object To Json  ${doc_data}
 	Execute Javascript
@@ -672,9 +667,8 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		field:			The name of field
 	...		value:			The value to be set
-	Оновити тендер  ${username}  ${tender_uaid}
-	Wait and Click Element  ${tender.menu.bids}
-	Try To Set Object  ${field}	${value}	bids
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.bids}
+	Try To Set Object  ${field}	${value}  bids
 	Call Page Event  save  bids
 	Wait For Progress Bar
 	Call Page Event  _activate  bids
@@ -698,7 +692,7 @@ Resource	alltenders_utils.robot
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
 	...		lot_index:		Index of lot (default 0)
-	Оновити тендер			${username}		${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	Run Keyword And Return  Find And Get Data  _lots[${lot_index}].auctionUrl
 
 Подати цінову пропозицію
@@ -708,32 +702,33 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		bid:			The data to be set
 	...		lots_ids:		The IDs of lots
-	Оновити тендер	${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${data}=  Find And Get Data
 	${data}=  Create Safe Dictionary  ${data}
 	${contact}=  Get From Dictionary   ${bid.data.tenderers[0]}  contactPoint
-	${features}=  Get From Dictionary  ${bid.data}  parameters
-	${values}=  Create List
 	#	--- fill lots info ---
-	${lots_ids}=	Run Keyword If  ${lots_ids}  Set Variable  ${lots_ids}
-	...		ELSE  Create List
+	${values}=    Create List
+	${lots_ids}=  Run Keyword If  ${lots_ids}  Set Variable  ${lots_ids}  ELSE  Create List
 	:FOR  ${index}  ${lot_id}  IN ENUMERATE  @{lots_ids}
-	\	${lot_index}=	Find Index By Id	${data.lots}  ${lot_id}
-	\	${lot_id}=		Get Variable Value	${data.lots[${lot_index}].id}
-	\	Set To Dictionary	${bid.data.lotValues[${index}]}  relatedLot=${lot_id}
-	\	${value}=		Create Dictionary  id=${lot_id}  value=${bid.data.lotValues[${index}].value.amount}
+	\	${lot_index}=  Find Index By Id  ${data.lots}  ${lot_id}
+	\	${lot_id}=  Get Variable Value  ${data.lots[${lot_index}].id}
+	\	Set To Dictionary  ${bid.data.lotValues[${index}]}  relatedLot=${lot_id}
+	\	${value}=  Create Dictionary  id=${lot_id}  value=${bid.data.lotValues[${index}].value.amount}
 	\	Append To List	${values}  ${value}
 	#	--- fill features info ---
-	${features_ids}=		Run Keyword If  ${features_ids}  Set Variable  ${features_ids}
-	...		ELSE  Create List
+	${features}=      Create List
+	${features_ids}=  Run Keyword If  ${features_ids}  Set Variable  ${features_ids}  ELSE  Create List
 	:FOR  ${index}  ${feature_id}  IN ENUMERATE  @{features_ids}
-	\	${feature_index}=	Find Index By Id	${data.features}  ${feature_id}
-	\	${code}=			Get Variable Value	${data.features[${feature_index}].code}
-	\	Set To Dictionary	${bid.data.parameters[${index}]}  code=${code}
+	\	${feature_index}=  Find Index By Id  ${data.features}  ${feature_id}
+	\	${code}=  Get Variable Value  ${data.features[${feature_index}].code}
+	\	Set To Dictionary  ${bid.data.parameters[${index}]}  code=${code}
+	\	${feature}=  Create Dictionary  code=${code}  value=${bid.data.parameters[${index}].value}
+	\	Append To List	${features}  ${feature}
 	${data}=  Create Dictionary	contact=${contact}  features=${features}  value=${values}
 	${data}=  Object To Json  ${data}
 	Execute Javascript	angular.element('body').scope().$apply(function(scope){scope.context.tender._lots[0]._makeBid(${data});});
 	Wait For Progress Bar
+	Wait and Click Link  ${tender.menu.bids}
 	Call Page Event  _activate  bids
 	Підтвердити дію в діалозі
 	Capture Page Screenshot
@@ -745,8 +740,8 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		bid:			The data to be set
 	...		lots_ids:		List of lot's ID
-	Оновити тендер				${username}  	${tender_uaid}
-	Додати цінову пропозицію	${bid}			lots_ids=${lots_ids}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
+	Додати цінову пропозицію  ${bid}  lots_ids=${lots_ids}
 	Capture Page Screenshot
 
 Скасувати цінову пропозицію
@@ -754,7 +749,7 @@ Resource	alltenders_utils.robot
 	[Documentation]
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
-	Оновити тендер  ${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.bids}
 	Call Page Event  delete  bids
 	Підтвердити дію в діалозі
 
@@ -818,11 +813,9 @@ Resource	alltenders_utils.robot
 	...		award_num:		The qualification number
 	...		[Description] Find tender using uaid,  and call upload_qualification_document
 	...		[Return] Reply of API
-	${upload_btn}=		Build Xpath		${tender.form.awards.menu.uploadFile}	${award_num}
-	Оновити тендер	${username}			${tender_uaid}
-	Wait and Click Element				${tender.menu.awards}
-	Upload File							${document}								${upload_btn}
-	#[Return]  ${doc}
+	${upload_btn}=  Build Xpath  ${tender.form.awards.menu.uploadFile}  ${award_num}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.awards}
+	Upload File  ${document}  ${upload_btn}
 
 Підтвердити постачальника
 	[Arguments]		${username}  ${tender_uaid}  ${award_num}
@@ -832,10 +825,9 @@ Resource	alltenders_utils.robot
 	...		award_num:		The qualification number
   	...		[Description] Find tender using uaid, create dict with confirmation data and call patch_award
 	...		[Return] Nothing
-	${activate_btn}=	Build Xpath		${tender.form.awards.menu.activate}		${award_num}
-	Оновити тендер	${username}			${tender_uaid}
-	Wait and Click Element				${tender.menu.awards}
-	Wait and Click Button				${activate_btn}
+	${activate_btn}=  Build Xpath  ${tender.form.awards.menu.activate}  ${award_num}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.awards}
+	Wait and Click Button  ${activate_btn}
 	Підтвердити дію в діалозі
 
 Дискваліфікувати постачальника
@@ -846,13 +838,10 @@ Resource	alltenders_utils.robot
 	...		award_num:		The qualification number
   	...		[Description] Find tender using uaid, create data dict with unsuccessful status and call patch_award
 	...		[Return] Reply of API
-	${cancel_btn}=		Build Xpath		${tender.form.awards.menu.cancel}		${award_num}
-	Оновити тендер	${username}			${tender_uaid}
-	Wait and Click Element				${tender.menu.awards}
-	Wait and Click Button				${cancel_btn}
+	${cancel_btn}=  Build Xpath  ${tender.form.awards.menu.cancel}  ${award_num}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.awards}
+	Wait and Click Button  ${cancel_btn}
 	Підтвердити дію в діалозі
-	#[Return]  ${reply}
-
 
 Скасування рішення кваліфікаційної комісії
 	[Arguments]		${username}  ${tender_uaid}  ${award_num}
@@ -862,8 +851,7 @@ Resource	alltenders_utils.robot
 	...		award_num:		The qualification number
   	...		[Description] Find tender using uaid, create data dict with unsuccessful status and call patch_award
 	...		[Return] Reply of API
-	Оновити тендер	${username}		${tender_uaid}
-	Wait and Click Element			${tender.menu.awards}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.awards}
 	#[Return]  ${reply}
 
 ##############################################################################
@@ -879,12 +867,12 @@ Resource	alltenders_utils.robot
 	...		document:		The path to file that will be uploaded
 	...		[Description] Find tender using uaid and call create_award, add documentation to that award and update his status to active
 	...		[Return] Nothing
-	Оновити тендер	${username}			${tender_uaid}
-	${data}=  			Object To Json  	${supplier_data.data}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
+	${data}=  Object To Json  ${supplier_data.data}
 	#	--- create award ---
 	Execute Javascript	angular.element('body').scope().$apply(function(scope){scope.context.tender.createAward(${data});});
-	Wait Until Page Contains Element	${award}				${common.wait}
-	Wait and Click Button				${award.create}
+	Wait Until Page Contains Element  ${award}  ${common.wait}
+	Wait and Click Button  ${award.create}
 	Wait For Progress Bar
 	#	--- upload documentation ---
 	alltenders.Завантажити документ рішення кваліфікаційної комісії	${username}  ${document}  ${tender_uaid}  ${0}
@@ -964,11 +952,10 @@ Resource	alltenders_utils.robot
 	...		contract_num:	The number of contract
 	...		[Description] Find tender using uaid, get contract test_confirmation data and call patch_contract
 	...		[Return] Nothing
-	Оновити тендер	${username}		${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.contracts}
 	${endDate}=  Find And Get Data  awards[0].complaintPeriod.endDate
 	${sleep}=    Wait To Date  ${endDate}
 	Run Keyword If  ${sleep} > 0	Fail  Неможливо укласти угоду для переговорної процедури поки не пройде stand-still період
-	Wait and Click Element  ${tender.menu.contracts}
 	Run Keyword And Ignore Error  Try To Set Data  _contract._clone.contractNumber  ${contract_num}
 	Execute Javascript  angular.element('body').scope().$apply(function(scope){scope.context.tender._contract.activate(true);});
 	Підтвердити дію в діалозі
@@ -995,8 +982,6 @@ Resource	alltenders_utils.robot
 	...		[Description] Find tender using uaid, create data dict with active status and call patch_qualification
 	...		[Return] Reply of API
 	Оновити тендер	${username}		${tender_uaid}
-	${data}=  Find And Get Data
-	Log Object Data  ${data}  activate_qualification_${qualification_num}  json
 	${index}=	Get Qualification Index  ${qualification_num}
 	Call Page Event  _qualifications[${index}].activate
 	Підтвердити дію в діалозі
@@ -1010,8 +995,6 @@ Resource	alltenders_utils.robot
 	...		[Description] Find tender using uaid, create data dict with unsuccessful status and call patch_qualification
 	...		[Return] Reply of API
 	Оновити тендер	${username}		${tender_uaid}
-	${data}=  Find And Get Data
-	Log Object Data  ${data}  reject_qualification_${qualification_num}  json
 	${index}=	Get Qualification Index  ${qualification_num}
 	Call Page Event  _qualifications[${index}].reject
 	Підтвердити дію в діалозі
@@ -1040,8 +1023,6 @@ Resource	alltenders_utils.robot
 	...		[Description] Find tender using uaid, create data dict with cancelled status and call patch_qualification
 	...		[Return] Reply of API
 	Оновити тендер	${username}		${tender_uaid}
-	${data}=  Find And Get Data
-	Log Object Data  ${data}  cancel_qualification_${qualification_num}  json
 	${index}=	Get Qualification Index  ${qualification_num}
 	Call Page Event  _qualifications[${index}].cancel
 	Capture Page Screenshot
@@ -1055,6 +1036,6 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:		The UA ID of the tender
 	...		[Description] Find tender using uaid and call patch_tender
 	...		[Return] Reply of API
-	Оновити тендер	${username}		${tender_uaid}
-	Wait and Click Element			${tender.menu.activeAfterQualification}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
+	Wait and Click Element  ${tender.menu.activeAfterQualification}
 	Підтвердити дію в діалозі
