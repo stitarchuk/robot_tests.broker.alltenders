@@ -50,7 +50,6 @@ Call Page Event
 	...		event_path:	The path to the event
 	...		object_path: The path to the object
 	${path}=  Build Path For Data  ${event_path}  ${object_path}
-#	${path}=  Set Variable If  '${event_path}' == '${None}'  ${object_path}  ${object_path}.${event_path}
 	Run Keyword And Return	Execute Javascript	return angular.element('body').scope().$apply(function(scope){return scope.context.${path}();});
 
 Click Element If Responsive
@@ -77,7 +76,6 @@ Find And Get Data
 	...		data_path: 		The path to the data
 	...		object_path:	The path to the object
 	${path}=  Build Path For Data  ${data_path}  ${object_path}
-#	${path}=  Set Variable If  '${data_path}' == '${None}'  ${object_path}  ${object_path}.${data_path}
 	Run Keyword And Return	Execute Javascript
 	...		return angular.element('body').scope().$apply(function(scope) {	
 	...		var cad = function(obj){
@@ -169,7 +167,6 @@ Try To Set Data
 	...		value:			The value to set
 	...		object_path:	The path to the object
 	${path}=  Build Path For Data  ${data_path}  ${object_path}
-#	${path}=  Set Variable If  '${data_path}' == '${None}'  ${object_path}  ${object_path}.${data_path}
 	Run Keyword And Return	Execute Javascript	return angular.element('body').scope().$apply(function(scope){return scope.context.${path}=${value};});
 
 Upload File

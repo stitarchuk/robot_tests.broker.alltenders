@@ -227,10 +227,12 @@ Resource	alltenders_utils.robot
 	[Return]	${index}
 
 Знайти індекс скарги по ідентифікатору
-	[Arguments]		${complaint_id}
+	[Arguments]		${complaint_id}  ${award_index}=${None}
 	[Documentation]
 	...		complaint_id:	The ID of the complaint
-	${data}=  Find And Get Data  complaints
+	...		award_index: 	The index of award
+	${path}=  Set Variable If  '${award_index}' == '${None}'  complaints  awards[${award_index}].complaints
+	${data}=  Find And Get Data  ${path}
 	${index}=  Find Index By Id  ${data}  ${complaint_id}
 	Run Keyword If	${index} < 0	Fail	Скаргу id=${complaint_id} не знайдено
 	[Return]	${index}
@@ -274,14 +276,15 @@ Resource	alltenders_utils.robot
 	Run Keyword And Return  Element is Responsive  ${locator}
 
 Отримати індекс скарги
-	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${award_index}=${None}
 	[Documentation]
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
 	...		complaint_id:	The ID of the complaint
-	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.complaints}
-	Run Keyword And Return  Знайти індекс скарги по ідентифікатору  ${complaint_id}
-
+	${card}=  Set Variable If  '${award_index}' == '${None}'  ${tender.menu.complaints}  ${tender.menu.awards}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${card}
+	Run Keyword And Return  Знайти індекс скарги по ідентифікатору  ${complaint_id}  ${award_index}
+	
 Підтвердити дію в діалозі
 	[Arguments]		${timeout}=${common.wait}
 	[Documentation]
