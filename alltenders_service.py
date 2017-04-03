@@ -15,6 +15,16 @@ import urllib
 def get_qualification_index(index):
     return abs(int(index))
 
+def get_accelerator(intervals, mode=None):
+    default = intervals.get('default', {})
+    if mode is None:
+        mode = default
+    else:
+        mode = intervals.get(mode, default)
+    accelerator = int(default.get('accelerator', 0))
+    accelerator = int(mode.get('accelerator', accelerator))
+    return accelerator
+
 def build_xpath(path, *idx):
     idx = tuple(int(i) + 1 for i in idx)
     return 'xpath=' + path.replace('xpath=', '').format(*idx)
@@ -182,6 +192,13 @@ def prepare_data(initial_data):
                     classification['description'] = u'Не визначено'
                     classification['scheme'] = u'NONE'
     return initial_data
+
+def set_complaints_accelerator(intervals):
+    intervals['belowThreshold'] = {
+        'accelerator': 130,
+        'enquiry': [0, 17],
+        'tender': [0, 15]
+    }
 
 def ua_date_to_iso(uadate):
     return datetime_to_iso(uadate, "%d.%m.%Y")

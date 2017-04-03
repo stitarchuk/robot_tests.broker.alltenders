@@ -28,7 +28,6 @@ Ask Question
 	Wait Until Page Contains Element			${tender.question.form}					${common.wait}
 	Wait and Input Text							${tender.question.form.title}			${title}
 	Wait and Input Text							${tender.question.form.description}		${description}
-	Capture Page Screenshot
 	Wait and Click Button						${tender.question.form.send}
 	Wait For Progress Bar
 	Wait Until Page Does Not Contain Element	${tender.question.form}
@@ -130,7 +129,6 @@ Save Tender
 	Reload Angular Page
 	Run Keyword If  'xpath=' in '${locator}'  Wait Until Page Contains Element  ${locator}  ${timeout}
 	...			ELSE  Wait Until Page Contains  ${locator}  ${timeout}
-	Capture Page Screenshot
 
 Set Bid
 	[Arguments]		${value}  ${idxs}
@@ -182,9 +180,7 @@ Upload File
 	Wait and Click Button				${btn_upload}
 	Wait Until Page Contains Element	${upload_locator}				${common.wait}
  	Choose File							${upload_locator}				${filepath}
-	Capture Page Screenshot
 	Wait and Click Button				${tender.uploadFile.form.save}
-	Capture Page Screenshot
 	Wait Until Page Does Not Contain Element	${tender.uploadFile.form}		${common.wait}
 	Wait For Progress Bar
 
@@ -199,7 +195,6 @@ Upload File To Object
 	Wait Until Page Contains Element	${upload_locator}				${common.wait}
 	Choose File							${upload_locator}				${filepath}
 	Wait and Click Button				${tender.uploadFile.form.save}
-	Capture Page Screenshot
 	Wait Until Page Does Not Contain Element	${tender.uploadFile.form}		${common.wait}
 	Wait For Progress Bar
 	
@@ -259,13 +254,13 @@ Wait and Select In Combo
 	...		locator:	The combo xpath locator
 	...		text:		The text to combo input
 	...		timeout:	Timeout
-	Wait and Click Element	${locator}/div	${timeout}
-	Sleep					1
-	Wait and Input Text		${locator}${combobox.filter}	${text}	${timeout}
-	Sleep					${wait_before_select}
-	${selector}=			Build Xpath From Template	${locator}${combobox.selector}	${text}	
-	Wait and Click Element	${selector}
-	Sleep  					1
+	Wait and Click Element  ${locator}/div  ${timeout}
+	Sleep  1
+	Wait and Input Text  ${locator}${combobox.filter}  ${text}  ${timeout}
+	Sleep  ${wait_before_select}
+	${selector}=  Build Xpath From Template  ${locator}${combobox.selector}  ${text}	
+	Wait and Click Element  ${selector}
+	Sleep  1
 
 Wait For Angular
 	[Arguments]		${timeout}=${common.wait}

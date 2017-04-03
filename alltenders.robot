@@ -21,7 +21,18 @@ Resource	alltenders_utils.robot
 	[Arguments]  ${username}
 	[Documentation]  Відкрити браузер, створити об’єкт api wrapper, тощо
 	...		username:	The name of user
-	Open Browser	${USERS.users['${username}'].homepage}	${USERS.users['${username}'].browser}	alias=${username}
+	${intervals}=	Get Broker Property By Username  ${username}  intervals
+	Run Keyword If  '${SUITE_NAME}' == 'Tests Files.Complaints'  
+	...		Run Keywords
+	...			Set Complaints Accelerator  ${intervals}
+	...			AND
+	...			Set Suite Variable  ${submissionMethodDetails}  quick(mode:fast-forward)
+	${submissionMethodDetails}=  Get Variable Value  ${submissionMethodDetails}
+	${accelerator}=	Get Accelerator  ${intervals}  ${MODE}
+	${homepage}=	Get From Dictionary  ${USERS.users['${username}']}  homepage
+	${homepage}=	Set Variable If  '${username}' == '${tender_owner}' and ${accelerator} > ${0}  ${homepage}&accelerator=${accelerator}  ${homepage}
+	${homepage}=	Set Variable If  '${username}' == '${tender_owner}' and '${submissionMethodDetails}' == 'quick(mode:fast-forward)'  ${homepage}&ff=true  ${homepage}
+	Open Browser	${homepage}  ${USERS.users['${username}'].browser}  alias=${username}
 	Maximize Browser Window
 	Wait For Angular
 	Run Keyword If	'${username}' != 'alltenders_Viewer'	Увійти в систему	${username}
@@ -103,7 +114,7 @@ Resource	alltenders_utils.robot
 	Wait and Click Element		${menu.newTender}
 	Wait and Select In Combo	${create.tender.type}				${tenderType}
 	Wait and Click Button		${create.tender.create}
-	Sleep						2
+	Sleep  2
 	#	--- fill attributes for all tenders ---
 	Run Keyword And Ignore Error  Try To Set Data  title  "${data.title}"
 	Run Keyword And Ignore Error  Try To Set Data  title_ru  "${data.title_ru}"
@@ -120,6 +131,7 @@ Resource	alltenders_utils.robot
 	Run Keyword And Ignore Error  Try To Set Data  cause  "${data.cause}"
 	Run Keyword And Ignore Error  Try To Set Data  causeDescription  "${data.causeDescription}"
 	Run Keyword And Ignore Error  Try To Set Data  procurementMethodDetails  "${data.procurementMethodDetails}"
+	Run Keyword And Ignore Error  Try To Set Data  submissionMethodDetails  "${data.submissionMethodDetails}"
 	#	--- add lots ---
 	Run Keyword And Ignore Error  Додати лоти			${data.lots}
 	#	--- add items ---
@@ -347,7 +359,6 @@ Resource	alltenders_utils.robot
 	Answer Question		${index}  ${answer}
 	Wait Until Page Contains Element  ${tender.questions.form.grid}  ${common.wait}
 	Reload Angular Page
-	Capture Page Screenshot
 
 Задати запитання на лот
 	[Arguments]		${username}  ${tender_uaid}  ${lot_id}  ${question}
@@ -484,7 +495,7 @@ Resource	alltenders_utils.robot
 	...		tender_uaid:	The UA ID of the tender
 	...		complaint_id:	The ID of the complaint
 	...		field:			The name of field
-	...		award_id:		The ID of the award
+	...		award_index:	The index of the award
 	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}  ${award_index}
 	${value}=  Run Keyword If  '${award_index}' == '${None}'
 	...		Find And Get Data  complaints[${index}].${field}
@@ -717,7 +728,7 @@ Resource	alltenders_utils.robot
 	...		[Return]  The complaintID
 	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	Call Page Event  awards[${award_index}].complaint
-	${complaintID}=  Створити вимогу  ${claim}
+	${complaintID}=  Створити вимогу  ${claim}  ${award_index}
 	[Return]	${complaintID}
 
 ##############################################################################
@@ -730,6 +741,7 @@ Resource	alltenders_utils.robot
 	...		username:		The name of user
 	...		filepath:		The path to file that will be uploaded
 	...		tender_uaid:	The UA ID of the tender
+	Sleep  ${common.wait}
 	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.bids}
 	Wait Until Page Contains Element  ${tender.form.bid}  ${common.wait}
 	Upload File  ${filepath}  ${tender.form.bid.menu.uploadFile}
@@ -783,7 +795,6 @@ Resource	alltenders_utils.robot
 	Call Page Event  _activate  bids
 	${status}=	Run Keyword And Return Status  Page Should Contain Element  ${dialog}
 	Run Keyword If  ${status}  Підтвердити дію в діалозі
-	Capture Page Screenshot
 
 Отримати інформацію із пропозиції
 	[Arguments]		${username}  ${tender_uaid}  ${field}
@@ -843,7 +854,6 @@ Resource	alltenders_utils.robot
 	Wait and Click Link  ${tender.menu.bids}
 	Call Page Event  _activate  bids
 	Підтвердити дію в діалозі
-	Capture Page Screenshot
 
 Подати цінову пропозицію на лоти
     [Arguments]    ${username}  ${tender_uaid}  ${bid}  ${lots_ids}
@@ -854,7 +864,6 @@ Resource	alltenders_utils.robot
 	...		lots_ids:		List of lot's ID
 	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	Додати цінову пропозицію  ${bid}  lots_ids=${lots_ids}
-	Capture Page Screenshot
 
 Скасувати цінову пропозицію
 	[Arguments]		${username}  ${tender_uaid}
@@ -989,7 +998,6 @@ Resource	alltenders_utils.robot
 	#	--- upload documentation ---
 	alltenders.Завантажити документ рішення кваліфікаційної комісії	${username}  ${document}  ${tender_uaid}  ${0}
 	alltenders.Підтвердити постачальника							${username}  ${tender_uaid}  ${0}
-	Capture Page Screenshot
 
 Скасувати закупівлю
 	[Arguments]		${username}  ${tender_uaid}  ${cancel_reason}  ${document}  ${new_description}
@@ -1067,7 +1075,7 @@ Resource	alltenders_utils.robot
 	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.contracts}
 	${endDate}=  Find And Get Data  awards[0].complaintPeriod.endDate
 	${sleep}=    Wait To Date  ${endDate}
-	Run Keyword If  ${sleep} > 0	Fail  Неможливо укласти угоду для переговорної процедури поки не пройде stand-still період
+	Run Keyword If  ${sleep} > 0  Fail  Неможливо укласти угоду для переговорної процедури поки не пройде stand-still період
 	Run Keyword And Ignore Error  Try To Set Data  _contract._clone.contractNumber  ${contract_num}
 	Execute Javascript  angular.element('body').scope().$apply(function(scope){scope.context.tender._contract.activate(true);});
 	Підтвердити дію в діалозі
@@ -1137,9 +1145,7 @@ Resource	alltenders_utils.robot
 	Оновити тендер	${username}		${tender_uaid}
 	${index}=	Get Qualification Index  ${qualification_num}
 	Call Page Event  _qualifications[${index}].cancel
-	Capture Page Screenshot
 	Підтвердити дію в діалозі
-	Capture Page Screenshot
 
 Затвердити остаточне рішення кваліфікації
 	[Arguments]		${username}  ${tender_uaid}
