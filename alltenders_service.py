@@ -195,7 +195,7 @@ def prepare_data(initial_data):
 
 def set_complaints_accelerator(intervals):
     intervals['belowThreshold'] = {
-        'accelerator': 130,
+        'accelerator': 100,
         'enquiry': [0, 17],
         'tender': [0, 15]
     }

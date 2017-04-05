@@ -709,7 +709,7 @@ Resource	alltenders_utils.robot
 	...		[Return]  The complaintID
 	Run Keyword And Return If  '${lot_id}' == '${None}'
 	...		alltenders.Створити чернетку вимоги про виправлення умов закупівлі  ${username}  ${tender_uaid}  ${claim}
-	Оновити тендер	${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${index}=	Знайти індекс лота по ідентифікатору  ${lot_id}
 	${relatedLot}=	Find And Get Data  lots[${lot_index}].id
 	Set to dictionary  ${claim.data}  relatedLot=${relatedLot}
@@ -726,7 +726,7 @@ Resource	alltenders_utils.robot
 	...		award_index: 	The index of award
 	...		[Description]  Створює вимогу у статусі "draft".
 	...		[Return]  The complaintID
-	Reload Tender And Switch Card  ${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.awards}
 	Call Page Event  awards[${award_index}].complaint
 	${complaintID}=  Створити вимогу  ${claim}  ${award_index}
 	[Return]	${complaintID}
