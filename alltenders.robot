@@ -21,7 +21,18 @@ Resource	alltenders_utils.robot
 	[Arguments]  ${username}
 	[Documentation]  Відкрити браузер, створити об’єкт api wrapper, тощо
 	...		username:	The name of user
-	Open Browser	${USERS.users['${username}'].homepage}	${USERS.users['${username}'].browser}	alias=${username}
+	${intervals}=	Get Broker Property By Username  ${username}  intervals
+	Run Keyword If  '${SUITE_NAME}' == 'Tests Files.Complaints'  
+	...		Run Keywords
+	...			Set Complaints Accelerator  ${intervals}
+	...			AND
+	...			Set Suite Variable  ${submissionMethodDetails}  quick(mode:fast-forward)
+	${submissionMethodDetails}=  Get Variable Value  ${submissionMethodDetails}
+	${accelerator}=	Get Accelerator  ${intervals}  ${MODE}
+	${homepage}=	Get From Dictionary  ${USERS.users['${username}']}  homepage
+	${homepage}=	Set Variable If  '${username}' == '${tender_owner}' and ${accelerator} > ${0}  ${homepage}&accelerator=${accelerator}  ${homepage}
+	${homepage}=	Set Variable If  '${username}' == '${tender_owner}' and '${submissionMethodDetails}' == 'quick(mode:fast-forward)'  ${homepage}&ff=true  ${homepage}
+	Open Browser	${homepage}  ${USERS.users['${username}'].browser}  alias=${username}
 	Maximize Browser Window
 	Wait For Angular
 	Run Keyword If	'${username}' != 'alltenders_Viewer'	Увійти в систему	${username}
@@ -103,7 +114,7 @@ Resource	alltenders_utils.robot
 	Wait and Click Element		${menu.newTender}
 	Wait and Select In Combo	${create.tender.type}				${tenderType}
 	Wait and Click Button		${create.tender.create}
-	Sleep						2
+	Sleep  2
 	#	--- fill attributes for all tenders ---
 	Run Keyword And Ignore Error  Try To Set Data  title  "${data.title}"
 	Run Keyword And Ignore Error  Try To Set Data  title_ru  "${data.title_ru}"
@@ -120,6 +131,7 @@ Resource	alltenders_utils.robot
 	Run Keyword And Ignore Error  Try To Set Data  cause  "${data.cause}"
 	Run Keyword And Ignore Error  Try To Set Data  causeDescription  "${data.causeDescription}"
 	Run Keyword And Ignore Error  Try To Set Data  procurementMethodDetails  "${data.procurementMethodDetails}"
+	Run Keyword And Ignore Error  Try To Set Data  submissionMethodDetails  "${data.submissionMethodDetails}"
 	#	--- add lots ---
 	Run Keyword And Ignore Error  Додати лоти			${data.lots}
 	#	--- add items ---
@@ -347,7 +359,6 @@ Resource	alltenders_utils.robot
 	Answer Question		${index}  ${answer}
 	Wait Until Page Contains Element  ${tender.questions.form.grid}  ${common.wait}
 	Reload Angular Page
-	Capture Page Screenshot
 
 Задати запитання на лот
 	[Arguments]		${username}  ${tender_uaid}  ${lot_id}  ${question}
@@ -422,6 +433,19 @@ Resource	alltenders_utils.robot
 	Execute Javascript  angular.element('div[ng-form=pageComplaintAnswer]').scope().$apply(function(scope){var model=scope.model;model.data.info={description:"${answer_data.data.resolution}",type:"${answer_data.data.resolutionType}"};model.apply();});
 	Wait For Progress Bar
 
+Відповісти на вимогу про виправлення визначення переможця
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${answer_data}  ${award_index}
+	[Documentation]  Переводить вимогу зі статусу "claim" у статус "answered"
+	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		complaint_id:	The ID of the complaint
+	...		answer_data: 	The data of answer
+	...		award_index: 	The index of award
+	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}  ${award_index}
+	Call Page Event  awards[${award_index}].complaints[${index}].answer
+	Execute Javascript  angular.element('div[ng-form=pageComplaintAnswer]').scope().$apply(function(scope){var model=scope.model;model.data.info={description:"${answer_data.data.resolution}",type:"${answer_data.data.resolutionType}"};model.apply();});
+	Wait For Progress Bar
+  
 Завантажити документацію до вимоги
 	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${document}
 	[Documentation]
@@ -432,8 +456,19 @@ Resource	alltenders_utils.robot
 	${index}=	Отримати індекс скарги	${username}  ${tender_uaid}  ${complaint_id}
 	Upload File To Object  ${document}  complaints[${index}]
 
+Завантажити документацію до вимоги про виправлення визначення переможця
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${award_index}  ${document}
+	[Documentation]
+	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		complaint_id: 	The ID of complaint
+	...		award_index: 	The index of award
+	...		document:		The document that will be uploaded
+	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}  ${award_index}
+	Upload File To Object  ${document}  awards[${award_index}].complaints[${index}]
+
 Отримати документ до скарги
-	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${doc_id}  ${award_id}=${None}
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${doc_id}  ${award_index}=${None}
 	[Documentation]
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
@@ -443,7 +478,7 @@ Resource	alltenders_utils.robot
 	Run Keyword And Return  alltenders.Отримати документ  ${username}  ${tender_uaid}  ${doc_id}
 
 Отримати інформацію із документа до скарги
-  	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${doc_id}  ${field}  ${award_id}=${None}
+  	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${doc_id}  ${field}  ${award_index}=${None}
 	[Documentation]
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
@@ -454,15 +489,17 @@ Resource	alltenders_utils.robot
 	Run Keyword And Return  alltenders.Отримати інформацію із документа  ${username}  ${tender_uaid}  ${doc_id}  ${field}
 	
 Отримати інформацію із скарги
-	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${field}  ${award_id}=${None}
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${field}  ${award_index}=${None}
 	[Documentation]
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
 	...		complaint_id:	The ID of the complaint
 	...		field:			The name of field
-	...		award_id:		The ID of the award
-	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}
-	${value}=  Find And Get Data  complaints[${index}].${field}
+	...		award_index:	The index of the award
+	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}  ${award_index}
+	${value}=  Run Keyword If  '${award_index}' == '${None}'
+	...		Find And Get Data  complaints[${index}].${field}
+	...		ELSE  Find And Get Data  awards[${award_index}].complaints[${index}].${field}
 	[Return]	${value}
 
 Перетворити вимогу про виправлення умов закупівлі в скаргу
@@ -487,6 +524,19 @@ Resource	alltenders_utils.robot
 	...		[Description]  Переводить вимогу у статус "pending"
 	alltenders.Перетворити вимогу про виправлення умов закупівлі в скаргу  ${username}  ${tender_uaid}  ${complaint_id}  ${escalating_data}
 	
+Перетворити вимогу про виправлення визначення переможця в скаргу
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${escalating_data}  ${award_index}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		complaint_id:		The ID of the complaint
+	...		escalating_data:	The escalating data 
+	...		award_index: 		The index of award
+	...		[Description]  Переводить вимогу у статус "pending"
+	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}  ${award_index}
+	Call Page Event  awards[${award_index}].complaints[${index}].pending
+	Wait For Progress Bar
+  
 Подати вимогу
 	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${confirmation_data}
 	[Documentation]
@@ -497,6 +547,19 @@ Resource	alltenders_utils.robot
 	...		[Description]  Переводить вимогу зі статусу "draft" у статус "claim"
 	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}
 	Call Page Event  complaints[${index}].claim
+	Wait For Progress Bar
+
+Подати вимогу про виправлення визначення переможця
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${award_index}  ${confirmation_data}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		complaint_id:		The ID of the complaint
+	...		award_index:        The index of award
+	...		confirmation_data:	The confirmation data 
+	...		[Description]  Переводить вимогу зі статусу "draft" у статус "claim"
+	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}  ${award_index}
+	Call Page Event  awards[${award_index}].complaints[${index}].claim
 	Wait For Progress Bar
 
 Підтвердити вирішення вимоги про виправлення умов закупівлі
@@ -521,6 +584,19 @@ Resource	alltenders_utils.robot
 	...		[Description]  Переводить вимогу зі статусу "answered" у статус "resolved"
 	alltenders.Підтвердити вирішення вимоги про виправлення умов закупівлі  ${username}  ${tender_uaid}  ${complaint_id}  ${confirmation_data}
 
+Підтвердити вирішення вимоги про виправлення визначення переможця
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${confirmation_data}  ${award_index}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		complaint_id:		The ID of the complaint
+	...		confirmation_data:	The confirmation data 
+	...		award_index:        The index of award
+	...		[Description]  Переводить вимогу зі статусу "answered" у статус "resolved"
+	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}  ${award_index}
+	Call Page Event  awards[${award_index}].complaints[${index}].resolve
+	Wait For Progress Bar
+  
 Скасувати вимогу про виправлення умов закупівлі
 	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${cancellation_data}
 	[Documentation]
@@ -543,6 +619,20 @@ Resource	alltenders_utils.robot
 	...		cancellation_data:	The cancelation data 
 	...		[Description]  Переводить вимогу в статус "canceled"
 	alltenders.Скасувати вимогу про виправлення умов закупівлі  ${username}  ${tender_uaid}  ${complaint_id}  ${cancellation_data}
+
+Скасувати вимогу про виправлення визначення переможця
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${cancellation_data}  ${award_index}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		complaint_id:		The ID of the complaint
+	...		cancellation_data:	The cancelation data 
+	...		award_index:        The index of award
+	...		[Description]  Переводить вимогу в статус "canceled"
+	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}  ${award_index}
+	Call Page Event  awards[${award_index}].complaints[${index}].cancel
+	Execute Javascript  angular.element('div[class="ui-dialog-content"]').scope().$apply(function(scope){scope.data.data={input:"${cancellation_data.data.cancellationReason}"};scope.actions.apply();});
+	Wait For Progress Bar
 
 Створити вимогу про виправлення умов закупівлі
 	[Arguments]		${username}  ${tender_uaid}  ${claim}  ${document}=${None}
@@ -578,6 +668,22 @@ Resource	alltenders_utils.robot
 	alltenders.Подати вимогу  ${username}  ${tender_uaid}  ${complaintID}  ${None}
 	[Return]	${complaintID}
 
+Створити вимогу про виправлення визначення переможця
+	[Arguments]		${username}  ${tender_uaid}  ${claim}  ${award_index}  ${document}=${None}
+	[Documentation]
+	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		claim:			The complaint that must be created
+	...		award_index:	The index of award
+	...		[Description]  Створює вимогу у статусі "claim". Можна створити вимогу як з документацією, так і без неї.
+	...		[Return]  The complaintID
+	${complaintID}=  alltenders.Створити чернетку вимоги про виправлення визначення переможця  ${username}  ${tender_uaid}  ${claim}  ${award_index}
+	${status}=  Run Keyword And Return Status  Should Not Be Equal  ${document}  ${None}
+	Run keyword If  ${status} == ${True}
+	...				alltenders.Завантажити документацію до вимоги про виправлення визначення переможця  ${username}  ${tender_uaid}  ${complaintID}  ${award_index}  ${document}
+	alltenders.Подати вимогу про виправлення визначення переможця  ${username}  ${tender_uaid}  ${complaintID}  ${award_index}  ${None}
+	[Return]	${complaintID}
+
 Створити чернетку вимоги про виправлення умов закупівлі
 	[Arguments]		${username}  ${tender_uaid}  ${claim}
 	[Documentation]
@@ -603,12 +709,26 @@ Resource	alltenders_utils.robot
 	...		[Return]  The complaintID
 	Run Keyword And Return If  '${lot_id}' == '${None}'
 	...		alltenders.Створити чернетку вимоги про виправлення умов закупівлі  ${username}  ${tender_uaid}  ${claim}
-	Оновити тендер	${username}  ${tender_uaid}
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${index}=	Знайти індекс лота по ідентифікатору  ${lot_id}
 	${relatedLot}=	Find And Get Data  lots[${lot_index}].id
 	Set to dictionary  ${claim.data}  relatedLot=${relatedLot}
 	Call Page Event  lots[${lot_index}].complaint
 	${complaintID}=	Створити вимогу  ${claim}
+	[Return]	${complaintID}
+
+Створити чернетку вимоги про виправлення визначення переможця
+	[Arguments]		${username}  ${tender_uaid}  ${claim}  ${award_index}
+	[Documentation]
+	...		username:		The name of user
+	...		tender_uaid:	The UA ID of the tender
+	...		claim:			The complaint that must be created
+	...		award_index: 	The index of award
+	...		[Description]  Створює вимогу у статусі "draft".
+	...		[Return]  The complaintID
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.awards}
+	Call Page Event  awards[${award_index}].complaint
+	${complaintID}=  Створити вимогу  ${claim}  ${award_index}
 	[Return]	${complaintID}
 
 ##############################################################################
@@ -621,6 +741,7 @@ Resource	alltenders_utils.robot
 	...		username:		The name of user
 	...		filepath:		The path to file that will be uploaded
 	...		tender_uaid:	The UA ID of the tender
+	Sleep  ${common.wait}
 	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.bids}
 	Wait Until Page Contains Element  ${tender.form.bid}  ${common.wait}
 	Upload File  ${filepath}  ${tender.form.bid.menu.uploadFile}
@@ -674,7 +795,6 @@ Resource	alltenders_utils.robot
 	Call Page Event  _activate  bids
 	${status}=	Run Keyword And Return Status  Page Should Contain Element  ${dialog}
 	Run Keyword If  ${status}  Підтвердити дію в діалозі
-	Capture Page Screenshot
 
 Отримати інформацію із пропозиції
 	[Arguments]		${username}  ${tender_uaid}  ${field}
@@ -712,26 +832,28 @@ Resource	alltenders_utils.robot
 	:FOR  ${index}  ${lot_id}  IN ENUMERATE  @{lots_ids}
 	\	${lot_index}=  Find Index By Id  ${data.lots}  ${lot_id}
 	\	${lot_id}=  Get Variable Value  ${data.lots[${lot_index}].id}
-	\	Set To Dictionary  ${bid.data.lotValues[${index}]}  relatedLot=${lot_id}
-	\	${value}=  Create Dictionary  id=${lot_id}  value=${bid.data.lotValues[${index}].value.amount}
-	\	Append To List	${values}  ${value}
+	\	${value}=  Get From Dictionary  ${bid.data.lotValues[${index}].value}  amount
+	\	${lotValue}=  Create Dictionary  id=${lot_id}  value=${value}
+	\	Append To List	${values}  ${lotValue}
 	#	--- fill features info ---
 	${features}=      Create List
 	${features_ids}=  Run Keyword If  ${features_ids}  Set Variable  ${features_ids}  ELSE  Create List
 	:FOR  ${index}  ${feature_id}  IN ENUMERATE  @{features_ids}
 	\	${feature_index}=  Find Index By Id  ${data.features}  ${feature_id}
 	\	${code}=  Get Variable Value  ${data.features[${feature_index}].code}
-	\	Set To Dictionary  ${bid.data.parameters[${index}]}  code=${code}
-	\	${feature}=  Create Dictionary  code=${code}  value=${bid.data.parameters[${index}].value}
+	\	${value}=  Get From Dictionary  ${bid.data.parameters[${index}]}  value
+	\	${feature}=  Create Dictionary  code=${code}  value=${value}
 	\	Append To List	${features}  ${feature}
 	${data}=  Create Dictionary	contact=${contact}  features=${features}  value=${values}
 	${data}=  Object To Json  ${data}
 	Execute Javascript	angular.element('body').scope().$apply(function(scope){scope.context.tender._lots[0]._makeBid(${data});});
+	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch1"]
+	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch2"]
+	Wait and Click Button				${tender.contact.form.make}
 	Wait For Progress Bar
 	Wait and Click Link  ${tender.menu.bids}
 	Call Page Event  _activate  bids
 	Підтвердити дію в діалозі
-	Capture Page Screenshot
 
 Подати цінову пропозицію на лоти
     [Arguments]    ${username}  ${tender_uaid}  ${bid}  ${lots_ids}
@@ -742,7 +864,6 @@ Resource	alltenders_utils.robot
 	...		lots_ids:		List of lot's ID
 	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	Додати цінову пропозицію  ${bid}  lots_ids=${lots_ids}
-	Capture Page Screenshot
 
 Скасувати цінову пропозицію
 	[Arguments]		${username}  ${tender_uaid}
@@ -877,7 +998,6 @@ Resource	alltenders_utils.robot
 	#	--- upload documentation ---
 	alltenders.Завантажити документ рішення кваліфікаційної комісії	${username}  ${document}  ${tender_uaid}  ${0}
 	alltenders.Підтвердити постачальника							${username}  ${tender_uaid}  ${0}
-	Capture Page Screenshot
 
 Скасувати закупівлю
 	[Arguments]		${username}  ${tender_uaid}  ${cancel_reason}  ${document}  ${new_description}
@@ -955,7 +1075,7 @@ Resource	alltenders_utils.robot
 	Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${tender.menu.contracts}
 	${endDate}=  Find And Get Data  awards[0].complaintPeriod.endDate
 	${sleep}=    Wait To Date  ${endDate}
-	Run Keyword If  ${sleep} > 0	Fail  Неможливо укласти угоду для переговорної процедури поки не пройде stand-still період
+	Run Keyword If  ${sleep} > 0  Fail  Неможливо укласти угоду для переговорної процедури поки не пройде stand-still період
 	Run Keyword And Ignore Error  Try To Set Data  _contract._clone.contractNumber  ${contract_num}
 	Execute Javascript  angular.element('body').scope().$apply(function(scope){scope.context.tender._contract.activate(true);});
 	Підтвердити дію в діалозі
@@ -1025,9 +1145,7 @@ Resource	alltenders_utils.robot
 	Оновити тендер	${username}		${tender_uaid}
 	${index}=	Get Qualification Index  ${qualification_num}
 	Call Page Event  _qualifications[${index}].cancel
-	Capture Page Screenshot
 	Підтвердити дію в діалозі
-	Capture Page Screenshot
 
 Затвердити остаточне рішення кваліфікації
 	[Arguments]		${username}  ${tender_uaid}
