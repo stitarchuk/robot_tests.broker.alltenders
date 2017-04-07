@@ -825,9 +825,14 @@ Resource	alltenders_utils.robot
 	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${data}=  Find And Get Data
 	${data}=  Create Safe Dictionary  ${data}
-	${contact}=  Get From Dictionary   ${bid.data.tenderers[0]}  contactPoint
-	#	--- fill lots info ---
+	${contact}=   Get From Dictionary   ${bid.data.tenderers[0]}  contactPoint
+	${features}=  Create List
 	${values}=    Create List
+	#	--- fill tender bid ---
+	${status}  ${value}=  Run Keyword And Ignore Error  Get From Dictionary  ${bid.data}  value
+	${value}=  Run Keyword If  '${status}' == 'PASS'  Create Dictionary  value=${value.amount}
+	Run Keyword If  '${status}' == 'PASS'  Append To List	${values}  ${value}
+	#	--- fill lots info ---
 	${lots_ids}=  Run Keyword If  ${lots_ids}  Set Variable  ${lots_ids}  ELSE  Create List
 	:FOR  ${index}  ${lot_id}  IN ENUMERATE  @{lots_ids}
 	\	${lot_index}=  Find Index By Id  ${data.lots}  ${lot_id}
@@ -836,7 +841,6 @@ Resource	alltenders_utils.robot
 	\	${lotValue}=  Create Dictionary  id=${lot_id}  value=${value}
 	\	Append To List	${values}  ${lotValue}
 	#	--- fill features info ---
-	${features}=      Create List
 	${features_ids}=  Run Keyword If  ${features_ids}  Set Variable  ${features_ids}  ELSE  Create List
 	:FOR  ${index}  ${feature_id}  IN ENUMERATE  @{features_ids}
 	\	${feature_index}=  Find Index By Id  ${data.features}  ${feature_id}
