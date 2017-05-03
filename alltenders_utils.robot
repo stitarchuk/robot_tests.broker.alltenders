@@ -51,6 +51,12 @@ Call Page Event
 	${path}=  Build Path For Data  ${event_path}  ${object_path}
 	Run Keyword And Return	Execute Javascript	return angular.element('body').scope().$apply(function(scope){return scope.context.${path}();});
 
+Click CheckBox If Responsive
+	[Arguments]		${locator}
+	[Documentation]
+	...		locator: The checkbox xpath locator
+	Click Element If Responsive		${locator}${checkbox.label}
+	
 Click Element If Responsive
 	[Arguments]		${locator}
 	[Documentation]

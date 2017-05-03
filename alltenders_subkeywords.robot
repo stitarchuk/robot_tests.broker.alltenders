@@ -290,6 +290,10 @@ Resource	alltenders_utils.robot
 	[Documentation]
 	...		timeout: Timeout after confirmation
 	Wait Until Page Contains Element			${dialog}		${timeout}
+	${checkbox}=	Build Xpath					${dialog.body.checkbox}  0
+	Click CheckBox If Responsive				${checkbox}
+	${checkbox}=	Build Xpath					${dialog.body.checkbox}  1
+	Click CheckBox If Responsive				${checkbox}
 	Wait and Click Button						${dialog.apply}
 	Wait Until Page Does Not Contain Element	${dialog}		${timeout}
 	Wait For Progress Bar
