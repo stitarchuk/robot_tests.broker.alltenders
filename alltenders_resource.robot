@@ -29,6 +29,8 @@ ${dialog.content}							${dialog}//div[contains(@class, "ui-dialog-content")]
 ${dialog.body}								${dialog.content}//div[contains(@class, "ui-dialog-body")]
 ${dialog.footer}							${dialog.content}//div[contains(@class, "ui-dialog-footer")]
 ${dialog.apply}								${dialog.footer}//button[@ng-click="actions.apply()"]
+${dialog.body.checkbox}						(${dialog.body}//ui-checkbox)[{}]
+
 #	--- login window ---
 ${login.window.userName}					${dialog.body}//input[@ng-model="$parent.data.email"]
 ${login.window.password}					${dialog.body}//input[@ng-model="$parent.data.password"]
