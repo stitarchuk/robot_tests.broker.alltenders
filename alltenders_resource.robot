@@ -85,7 +85,7 @@ ${tender.menu.verifySign}					${menu}//div[contains(@ng-click, "context.tender.v
 #	--- tender form ---
 ${tender.form}								xpath=//div[contains(@class, "document") and @ng-form="form"]
 ${tender.form.addFeature}					${tender.form}//div[@model="context.tender"]//button[@ng-click="model.addFeature()"]
-${tender.form.right.menu}					${tender.form}//ng-include//div[contains(@class, "right-menu-container")]
+${tender.form.right.menu}					${tender.form}//div[contains(@class, "tender-header")]//div[contains(@class, "right-menu-container")]
 ${tender.form.menu.cancel}					${tender.form.right.menu}//button[@x-for-testing="tender.tooltip.cancel"]
 ${tender.form.menu.complaint}				${tender.form.right.menu}//button[@x-for-testing="tender.tooltip.complaint"]
 ${tender.form.menu.question}				${tender.form.right.menu}//button[@x-for-testing="tender.tooltip.question"]
