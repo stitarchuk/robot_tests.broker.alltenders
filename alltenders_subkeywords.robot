@@ -100,8 +100,8 @@ Resource	alltenders_utils.robot
 	${idxs}=	Create List				${lot_index}
 	Build Xpath and Run Keyword	${idxs}  Wait and Click Button  ${tender.form.lot.menu.bid}
 	Run Keyword If  ${lots_ids}  Set Bids  ${bid.data.lotValues}  ${lots_ids}  ELSE  Set Bid  ${bid.data.value}  ${idxs}
-	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch1"]
-	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch2"]
+#	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch1"]
+#	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch2"]
 	Wait and Click Button				${tender.contact.form.make}
 	Wait For Progress Bar
 	Wait and Click Link					${tender.menu.bids}
