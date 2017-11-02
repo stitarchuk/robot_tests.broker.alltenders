@@ -851,8 +851,8 @@ Resource	alltenders_utils.robot
 	${data}=  Create Dictionary	contact=${contact}  features=${features}  value=${values}
 	${data}=  Object To Json  ${data}
 	Execute Javascript	angular.element('body').scope().$apply(function(scope){scope.context.tender._lots[0]._makeBid(${data});});
-	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch1"]
-	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch2"]
+#	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch1"]
+#	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch2"]
 	Wait and Click Button				${tender.contact.form.make}
 	Wait For Progress Bar
 	Wait and Click Link  ${tender.menu.bids}
