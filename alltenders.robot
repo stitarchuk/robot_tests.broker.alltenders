@@ -825,6 +825,7 @@ Resource	alltenders_utils.robot
 	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${data}=  Find And Get Data
 	${data}=  Create Safe Dictionary  ${data}
+	${type}=	Set Variable If  '${mode}' == 'single'  belowThreshold  ${data.procurementMethodType}
 	${contact}=   Get From Dictionary   ${bid.data.tenderers[0]}  contactPoint
 	${features}=  Create List
 	${values}=    Create List
@@ -851,8 +852,11 @@ Resource	alltenders_utils.robot
 	${data}=  Create Dictionary	contact=${contact}  features=${features}  value=${values}
 	${data}=  Object To Json  ${data}
 	Execute Javascript	angular.element('body').scope().$apply(function(scope){scope.context.tender._lots[0]._makeBid(${data});});
-#	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch1"]
-#	Wait and Click CheckBox				${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch2"]
+	Run Keyword If  'aboveThreshold' in '${type}' or 'competitiveDialogue' in '${type}' or 'negotiation' in '${type}'
+	...	    Run Keywords
+	...	        Wait and Click CheckBox  ${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch1"]
+	...	        AND
+	...	        Wait and Click CheckBox  ${tender.contact.form}//ui-checkbox[@ng-model="model.data.ch2"]
 	Wait and Click Button				${tender.contact.form.make}
 	Wait For Progress Bar
 	Wait and Click Link  ${tender.menu.bids}

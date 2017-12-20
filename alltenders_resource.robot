@@ -2,9 +2,12 @@
 @{empty.list}
 ${common.wait}								90
 &{tenderTypes}								aboveThresholdUA=Відкриті торги
+...											aboveThresholdUA.defense=Переговорна процедура для потреб оборони
 ...											aboveThresholdEU=Відкриті торги з публікацією англійською мовою
 ...											competitiveDialogueUA=Конкурентний діалог
+...											competitiveDialogueUA.stage2=Конкурентний діалог UA 2-й етап
 ...											competitiveDialogueEU=Конкурентний діалог з публікацією англійською мовою
+...											competitiveDialogueEU.stage2=Конкурентний діалог EU 2-й етап
 ...											negotiation=Переговорна процедура
 ...											negotiation.quick=Скорочена переговорна процедура
 ...											reporting=Звіт про укладений договір
@@ -121,20 +124,20 @@ ${tender.form.feature.item.value}			${tender.form.feature.body}//input[@name="va
 ${tender.form.awards}						${tender.form}//div[contains(@class, "awards")]
 ${tender.form.awards.body}					(${tender.form.awards}//div[contains(@class, "award") and contains(@ng-repeat, "award")])[{}]
 ${tender.form.awards.right.menu}			${tender.form.awards.body}//div[contains(@class, "right-menu-container")]
-${tender.form.awards.menu.activate}			${tender.form.awards.right.menu}//button[@x-for-testing="tender.award.tooltip.activate"]
-${tender.form.awards.menu.cancel}			${tender.form.awards.right.menu}//button[@x-for-testing="tender.award.tooltip.cancel"]
-${tender.form.awards.menu.reject}			${tender.form.awards.right.menu}//button[@x-for-testing="tender.award.tooltip.reject"]
-${tender.form.awards.menu.uploadFile}		${tender.form.awards.right.menu}//button[@x-for-testing="tender.award.tooltip.upload"]
+${tender.form.awards.menu.activate}			${tender.form.awards.right.menu}//button[contains(@x-for-testing, "tender.award.tooltip.activate")]
+${tender.form.awards.menu.cancel}			${tender.form.awards.right.menu}//button[contains(@x-for-testing, "tender.award.tooltip.cancel")]
+${tender.form.awards.menu.reject}			${tender.form.awards.right.menu}//button[contains(@x-for-testing, "tender.award.tooltip.reject")]
+${tender.form.awards.menu.uploadFile}		${tender.form.awards.right.menu}//button[contains(@x-for-testing, "tender.award.tooltip.upload")]
 #	--- bid in tender editor ---
 ${tender.form.bid}							${tender.form}//div[contains(@class, "bid")]
 ${tender.form.bid.body}						${tender.form.bid}//v-block-content
 ${tender.form.bid.right.menu}				${tender.form.bid.body}//div[contains(@class, "right-menu-container")]
-${tender.form.bid.menu.activate}			${tender.form.bid.right.menu}//button[@x-for-testing="tender.bid.tooltip.activate"]
-${tender.form.bid.menu.auction}				${tender.form.bid.right.menu}//button[@x-for-testing="tender.tooltip.auction"]
-${tender.form.bid.menu.delete}				${tender.form.bid.right.menu}//button[@x-for-testing="tender.bid.tooltip.delete"]
-${tender.form.bid.menu.pending}				${tender.form.bid.right.menu}//button[@x-for-testing="tender.bid.tooltip.pending"]
-${tender.form.bid.menu.save}				${tender.form.bid.right.menu}//button[@x-for-testing="tender.bid.tooltip.save"]
-${tender.form.bid.menu.uploadFile}			${tender.form.bid.right.menu}//button[@x-for-testing="tender.bid.tooltip.upload"]
+${tender.form.bid.menu.activate}			${tender.form.bid.right.menu}//button[contains(@x-for-testing, "tender.bid.tooltip.activate")]
+${tender.form.bid.menu.auction}				${tender.form.bid.right.menu}//button[contains(@x-for-testing, "tender.tooltip.auction")]
+${tender.form.bid.menu.delete}				${tender.form.bid.right.menu}//button[contains(@x-for-testing, "tender.bid.tooltip.delete")]
+${tender.form.bid.menu.pending}				${tender.form.bid.right.menu}//button[contains(@x-for-testing, "tender.bid.tooltip.pending")]
+${tender.form.bid.menu.save}				${tender.form.bid.right.menu}//button[contains(@x-for-testing, "tender.bid.tooltip.save")]
+${tender.form.bid.menu.uploadFile}			${tender.form.bid.right.menu}//button[contains(@x-for-testing, "tender.bid.tooltip.upload")]
 ${tender.form.bid.value}					${tender.form.bid.body}//input[@ng-model="$parent.lot.$value"]
 ${tender.form.bid.right.menu.button}		${tender.form.bid.right.menu}//button
 #	--- complaint in tender editor ---
