@@ -571,7 +571,9 @@ Resource	alltenders_utils.robot
 	...		confirmation_data:	The confirmation data 
 	...		[Description]  Переводить вимогу зі статусу "answered" у статус "resolved"
 	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}
-	Call Page Event  complaints[${index}].resolve
+	${status}  ${satisfied}=  Run Keyword And Ignore Error  Get From Dictionary  ${confirmation_data.data}  satisfied
+	${event}=  Set Variable If  '${status}' == 'PASS' and '${satisfied}' == '${False}'  resolve_not_satisfied  resolve
+	Call Page Event  complaints[${index}].${event}
 	Wait For Progress Bar
 
 Підтвердити вирішення вимоги про виправлення умов лоту
@@ -825,7 +827,7 @@ Resource	alltenders_utils.robot
 	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${data}=  Find And Get Data
 	${data}=  Create Safe Dictionary  ${data}
-	${type}=	Set Variable If  '${mode}' == 'single'  belowThreshold  ${data.procurementMethodType}
+	${type}=      Set Variable    ${data.procurementMethodType}
 	${contact}=   Get From Dictionary   ${bid.data.tenderers[0]}  contactPoint
 	${features}=  Create List
 	${values}=    Create List

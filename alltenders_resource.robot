@@ -1,6 +1,6 @@
 *** Variables ***
 @{empty.list}
-${common.wait}								90
+${common.wait}								120
 &{tenderTypes}								aboveThresholdUA=Відкриті торги
 ...											aboveThresholdUA.defense=Переговорна процедура для потреб оборони
 ...											aboveThresholdEU=Відкриті торги з публікацією англійською мовою
