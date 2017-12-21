@@ -314,7 +314,7 @@ Resource	alltenders_utils.robot
 	${b_locator}=  	Set Variable If  '${award_index}' == '${None}'  complaints  awards[${award_index}].complaints
 	${f_locator}= 	Set Variable If  '${award_index}' == '${None}'  ${tender.form.complaint}  ${tender.form.awards}
 	${m_locator}= 	Set Variable If  '${award_index}' == '${None}'  ${tender.menu.complaints}  ${tender.menu.awards}
-	Wait and Click Link					${m_locator}
+	Wait and Click Link					${m_locator}  240
 	Wait Until Page Contains Element	${f_locator}  ${common.wait}
 	${length}=		Find And Get Data  ${b_locator}.length
 	${complaintID}=	Find And Get Data  ${b_locator}[${length-1}].complaintID

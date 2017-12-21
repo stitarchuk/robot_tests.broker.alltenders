@@ -195,9 +195,9 @@ def prepare_data(initial_data):
 
 def set_complaints_accelerator(intervals):
     intervals['belowThreshold'] = {
-        'accelerator': 100,
-        'enquiry': [0, 17],
-        'tender': [0, 15]
+        'accelerator': 260,
+        'enquiry': [0, 70],
+        'tender': [0, 65]
     }
 
 def ua_date_to_iso(uadate):
@@ -210,3 +210,4 @@ def extract_file_name(path):
     return os.path.basename(path).split('.')[0]
 
 #if __name__ == '__main__':
+    
