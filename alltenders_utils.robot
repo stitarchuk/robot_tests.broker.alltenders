@@ -275,7 +275,24 @@ Wait For Angular
 	[Arguments]		${timeout}=${common.wait}
 	[Documentation]
 	...		timeout: Timeout
-	Wait For Condition	return angular.element(document.querySelector('[ng-app]')).injector().get('$browser').notifyWhenNoOutstandingRequests!=undefined  ${timeout}
+	Wait Until Keyword Succeeds
+	...    ${timeout} sec
+	...    1 sec
+	...    Execute Javascript
+	...    try {
+    ...        if(document.readyState !== 'complete') return false;
+	...        if(window.jQuery){
+	...            if(window.jQuery.active) return false;
+	...            else if(window.jQuery.ajax && window.jQuery.ajax.active) return false;
+	...        }
+	...        if(window.angular){
+    ...            if(!window.qa) window.qa = {doneRendering:false};
+    ...            var inj = window.angular.element('body').injector(), $rs = inj.get('$rootScope'), $http = inj.get('$http'), $timeout = inj.get('$timeout');
+	...            if($rs.$$phase === '$apply' || $rs.$$phase === '$digest' || $http.pendingRequests.length !== 0){window.qa.doneRendering = false; return false;}
+    ...            if(!window.qa.doneRendering){ $timeout(function() { window.qa.doneRendering = true; }, 0); return false;}
+	...        }
+	...        return true;
+    ...    } catch (e) {return false;}
 
 Wait For Progress Bar
 	[Arguments]		${timeout}=${common.wait}

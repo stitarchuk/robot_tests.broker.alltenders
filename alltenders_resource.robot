@@ -12,6 +12,7 @@ ${common.wait}								120
 ...											negotiation.quick=Скорочена переговорна процедура
 ...											reporting=Звіт про укладений договір
 ...											belowThreshold=Допорогова закупівля
+
 #	--- check-box ---
 ${checkbox.label}							//label[contains(@class, "checkbox__label")]
 ${checkbox.input}							//input[@type="checkbox"]
