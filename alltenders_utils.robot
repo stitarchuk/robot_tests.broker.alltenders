@@ -56,7 +56,7 @@ Click CheckBox If Responsive
 	...		locator: The checkbox xpath locator
 	${status}=  Run Keyword And Return Status	Page Should Contain Element		${locator}${checkbox.label}
 	${status}=  Run Keyword If  ${status}
-			...			Run Keyword And Return Status	Element Should Be Visible		${locator}${checkbox.label}
+	...			Run Keyword And Return Status	Element Should Be Visible		${locator}${checkbox.label}
 	Run Keyword If  ${status}	Click Element			${locator}${checkbox.label}
 	
 Click Element If Responsive
@@ -72,9 +72,9 @@ Element is Responsive
 	...		locator: What are we waiting for and where to click
 	${status}=  Run Keyword And Return Status	Page Should Contain Element		${locator}
 	${status}=  Run Keyword If  ${status}
-			...			Run Keyword And Return Status	Element Should Be Visible		${locator}
+	...			Run Keyword And Return Status	Element Should Be Visible		${locator}
 	${status}=  Run Keyword If  ${status}
-			...			Run Keyword And Return Status	Element Should Be Enabled		${locator}
+	...			Run Keyword And Return Status	Element Should Be Enabled		${locator}
 	[Return]	${status}
 
 Find And Get Data
@@ -119,7 +119,9 @@ Reload Tender And Switch Card By Field
 	...		tender_uaid:	The UA ID of the tender
 	...		field:			The name of field
 	${locator}=  Set Variable If  'questions' in '${field}'  ${tender.menu.questions}
-		...		'bids' in '${field}'  ${tender.menu.bids}		'awards' in '${field}'  ${tender.menu.awards}		${tender.menu.description}
+	...		'bids' in '${field}'  ${tender.menu.bids}
+	...		'awards' in '${field}'  ${tender.menu.awards}
+	...		${tender.menu.description}
 	${locator}=  Reload Tender And Switch Card  ${username}  ${tender_uaid}  ${locator}
 	[Return]	${locator}
 
@@ -181,7 +183,7 @@ Upload File
 	...		upload_locator:	The locator for file upload <input> element
 	${status}	${btn_index}=	Run Keyword And Ignore Error	Convert To Number	${btn_index}
 	${btn_upload}=	Run Keyword If  '${status}' == 'PASS'  Build Xpath For Parent	${btn_locator}	${btn_index}
-				...				ELSE	Set Variable	${btn_locator}
+	...				ELSE	Set Variable	${btn_locator}
 	Wait and Click Button				${btn_upload}
 	Wait Until Page Contains Element	${upload_locator}				${common.wait}
  	Choose File							${upload_locator}				${filepath}
