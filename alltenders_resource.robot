@@ -165,7 +165,7 @@ ${tender.form.lot.menu.delete}				${tender.form.lot.right.menu}//button[@x-for-t
 ${tender.form.lot.menu.question}			${tender.form.lot.right.menu}//button[@x-for-testing="tender.tooltip.questions"]
 ${tender.form.lot.menu.uploadFile}			${tender.form.lot.right.menu}//button[@x-for-testing="tender.tooltip.lot-upload"]
 # --- item in tender editor ---
-${tender.form.item.body}					(${tender.form.lot.body}//div[contains(@class, "item") and contains(@ng-repeat, "item") and .//@item="item")[{}]
+${tender.form.item.body}					(${tender.form.lot.body}//div[contains(@class, "item") and contains(@ng-repeat, "item") and .//@item="item"])[{}]
 ${tender.form.item.description}				${tender.form.item.body}//textarea[@ng-model="$parent.item.$description"]
 ${tender.form.item.cpv}						${tender.form.item.body}//div[@ng-model="item.classification"]
 ${tender.form.item.dkpp}					${tender.form.item.body}//div[@ng-model="ctrl.list"]

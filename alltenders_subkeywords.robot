@@ -25,7 +25,6 @@ Resource	alltenders_utils.robot
 	...		lot: The lot's data
 	Wait and Click Element		${tender.menu.addLot}
 	Wait For Angular
-	Sleep  1
 	#	--- check for dialog ---
 	${status}=	Run Keyword And Return Status  Page Should Contain Element  ${dialog}
 	Run Keyword If  ${status}  Підтвердити дію в діалозі  ELSE  Wait For Progress Bar
@@ -107,6 +106,13 @@ Resource	alltenders_utils.robot
 	Wait and Click Link					${tender.menu.bids}
 	Wait Until Page Contains Element	${tender.form.bid}					${common.wait}
 
+Змінити неціновий показник
+	[Arguments]		${feature}
+	[Documentation]
+	...		feature:		The feature data
+	Додати неціновий показник	${feature}
+	Save Tender
+
 Змінити неціновий показник на лот
 	[Arguments]		${feature}  ${lot_id}
 	[Documentation]
@@ -115,8 +121,7 @@ Resource	alltenders_utils.robot
 	${index}=  Знайти індекс лота по ідентифікатору  ${lot_id}
 	${lot_id}=  Find And Get Data  lots[${index}].id
 	Set To Dictionary  ${feature}  relatedItem=${lot_id}
-	Додати неціновий показник	${feature}
-	Save Tender
+	Змінити неціновий показник	${feature}
 
 Змінити неціновий показник на предмет
 	[Arguments]		${feature}  ${item_id}
@@ -126,17 +131,13 @@ Resource	alltenders_utils.robot
 	${index}=  Знайти індекс предмета по ідентифікатору  ${item_id}
 	${item_id}=  Find And Get Data  items[${index}].id
 	Set To Dictionary  ${feature}  relatedItem=${item_id}
-	Додати неціновий показник	${feature}
-	Save Tender
+	Змінити неціновий показник	${feature}
 	
 Змінити неціновий показник на тендер
 	[Arguments]		${feature}
 	[Documentation]
 	...		feature:		The feature data
-	Wait and Click Button		${tender.form.addFeature}
-	Додати неціновий показник	${feature}
-	Wait and Click CheckBox		${tender.form.showFeature}
-	Save Tender
+	Змінити неціновий показник	${feature}
 
 Змінити поле features
 	[Arguments]		${features}
@@ -243,7 +244,7 @@ Resource	alltenders_utils.robot
 	[Documentation]
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
-	alltenders.Пошук тендера по ідентифікатору	${username}  ${tender_uaid}  ${False}
+	Run Keyword And Return    alltenders.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}  ${None}  ${False}
 
 Конвертувати дані зі строки
 	[Arguments]		${field}  ${value}
