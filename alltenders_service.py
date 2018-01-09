@@ -184,13 +184,13 @@ def prepare_data(initial_data):
         address['postalCode'] = u'01034'
         address['streetAddress'] = u'01034, м.Київ, Шевченківський район, ВУЛИЦЯ ЯРОСЛАВІВ ВАЛ, будинок 38'
     # --- additionalClassifications for all items
-    if 'items' in data:
-        for item in data['items']:
-            if 'additionalClassifications' in item:
-                for classification in item['additionalClassifications']:
-                    classification['id'] = u'-----'
-                    classification['description'] = u'Не визначено'
-                    classification['scheme'] = u'NONE'
+#     if 'items' in data:
+#         for item in data['items']:
+#             if 'additionalClassifications' in item:
+#                 for classification in item['additionalClassifications']:
+#                     classification['id'] = u'-----'
+#                     classification['description'] = u'Не визначено'
+#                     classification['scheme'] = u'NONE'
     return initial_data
 
 def set_complaints_accelerator(intervals):

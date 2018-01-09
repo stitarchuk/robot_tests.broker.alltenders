@@ -8,20 +8,19 @@ Answer Question
 	[Documentation]
 	...		index:			The index of question
 	...		answer:			The question's answer
-	Wait For Angular	
+	Wait For Angular
 	Call Page Event								questions[${index}].answerToQuestion
 	Wait Until Page Contains Element			${tender.contact.form}			${common.wait}
 	Wait and Input Text							${tender.contact.form.answer}	${answer}
 	Wait and Click Button						${tender.contact.form.send}
 	Wait For Progress Bar
 	Wait Until Page Does Not Contain Element	${tender.contact.form}
-
+    
 Ask Question
 	[Arguments]		${question}  ${btn_locator}
 	[Documentation]
 	...		question:		The question that must be asked 
 	...		btn_locator:	The locator of button that should be clicked to display the question dialog
-
 	${title}=				Get From Dictionary		${question.data}	title
 	${description}=			Get From Dictionary		${question.data}	description
 	Wait and Click Button						${btn_locator}
@@ -134,7 +133,6 @@ Save Tender
 	Wait and Click Element  ${tender.menu.save}
 	Run Keyword If	'${send}' == '${True}'	Wait and Click Element	${tender.menu.send}
 	Wait For Progress Bar  ${timeout}
-	Sleep  1
 	Reload Angular Page
 	Run Keyword If  'xpath=' in '${locator}'  Wait Until Page Contains Element  ${locator}  ${timeout}
 	...			ELSE  Wait Until Page Contains  ${locator}  ${timeout}

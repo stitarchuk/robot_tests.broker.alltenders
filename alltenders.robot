@@ -30,8 +30,8 @@ Resource	alltenders_utils.robot
 	${submissionMethodDetails}=  Get Variable Value  ${submissionMethodDetails}
 	${accelerator}=	Get Accelerator  ${intervals}  ${MODE}
 	${homepage}=	Get From Dictionary  ${USERS.users['${username}']}  homepage
-	${homepage}=	Set Variable If  '${username}' == '${tender_owner}' and ${accelerator} > ${0}  ${homepage}&accelerator=${accelerator}  ${homepage}
-	${homepage}=	Set Variable If  '${username}' == '${tender_owner}' and '${submissionMethodDetails}' == 'quick(mode:fast-forward)'  ${homepage}&ff=true  ${homepage}
+	${homepage}=	Set Variable If  '${username}' == 'alltenders_Owner' and ${accelerator} > ${0}  ${homepage}&accelerator=${accelerator}  ${homepage}
+	${homepage}=	Set Variable If  '${username}' == 'alltenders_Owner' and '${submissionMethodDetails}' == 'quick(mode:fast-forward)'  ${homepage}&ff=true  ${homepage}
 	Open Browser	${homepage}  ${USERS.users['${username}'].browser}  alias=${username}
 	Maximize Browser Window
 	Wait For Angular
@@ -73,6 +73,13 @@ Resource	alltenders_utils.robot
 	${value}=	Run Keyword If	'${field}' == 'status'	Call Page Event  getStatus  ELSE  Find And Get Data  ${field}
 	Run Keyword And Return  Конвертувати дані зі строки  ${field}  ${value}
 
+Отримати тендер другого етапу та зберегти його
+	[Arguments]		${username}  ${tender_id}
+	[Documentation]
+	...		username:		The name of user
+	...		tender_id:		The ID of the tender
+	Reload Tender And Switch Card  ${username}  ${USERS.users['${tender_owner}'].second_stage_data.data.tenderID}
+
 Підготувати дані для оголошення тендера
 	[Arguments]		${username}  ${initial_data}  ${role_name}=tender_owner
 	[Documentation]
@@ -84,13 +91,14 @@ Resource	alltenders_utils.robot
 	[Return]	${tender_data}
 
 Пошук тендера по ідентифікатору
-	[Arguments]		${username}  ${tender_uaid}  ${screenshot}==${True}
+	[Arguments]		${username}  ${tender_uaid}  ${save_key}=tender_data  ${screenshot}=${True}
 	[Documentation]
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
+	...		save_key:		The key for saving the data
 	...		screenshot:		Set true if need capture page screenshot
-	Switch Browser		${username}
-	Go To				${USERS.users['${username}'].homepage}
+	Switch Browser		                ${username}
+	Go To	                			${USERS.users['${username}'].homepage}
 	Wait For Angular	
 	Wait and Click Element				${menu.search}
 	Wait and Input Text					${search.filter.values.common}	${tender_uaid}
@@ -99,6 +107,11 @@ Resource	alltenders_utils.robot
 	Run Keyword If  					'${screenshot}' == '${True}'  Capture Page Screenshot
 	Wait and Click Element				${search.grid.tenderInfo.title}//span[text() = "${tender_uaid}"]
 	Wait Until Page Contains Element	${tender.form}					${common.wait}
+	${data}=	                        Find And Get Data
+	${data}=	                        Create Safe Dictionary  ${data}
+	${tender}=							Create Dictionary  data=${data}
+	Run Keyword If  	                '${save_key}' != '${None}'  Set To Dictionary  ${USERS.users['${username}']}  ${save_key}=${tender}
+	[Return]	${tender}
 
 Створити тендер
 	[Arguments]		${username}  ${tender}
@@ -713,9 +726,9 @@ Resource	alltenders_utils.robot
 	...		alltenders.Створити чернетку вимоги про виправлення умов закупівлі  ${username}  ${tender_uaid}  ${claim}
 	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	${index}=	Знайти індекс лота по ідентифікатору  ${lot_id}
-	${relatedLot}=	Find And Get Data  lots[${lot_index}].id
+	${relatedLot}=	Find And Get Data  lots[${index}].id
 	Set to dictionary  ${claim.data}  relatedLot=${relatedLot}
-	Call Page Event  lots[${lot_index}].complaint
+	Call Page Event  lots[${index}].complaint
 	${complaintID}=	Створити вимогу  ${claim}
 	[Return]	${complaintID}
 
@@ -825,8 +838,8 @@ Resource	alltenders_utils.robot
 	...		bid:			The data to be set
 	...		lots_ids:		The IDs of lots
 	Reload Tender And Switch Card  ${username}  ${tender_uaid}
-	${data}=  Find And Get Data
-	${data}=  Create Safe Dictionary  ${data}
+	${data}=      Find And Get Data
+	${data}=      Create Safe Dictionary  ${data}
 	${type}=      Set Variable    ${data.procurementMethodType}
 	${contact}=   Get From Dictionary   ${bid.data.tenderers[0]}  contactPoint
 	${features}=  Create List
@@ -1167,3 +1180,25 @@ Resource	alltenders_utils.robot
 	Reload Tender And Switch Card  ${username}  ${tender_uaid}
 	Wait and Click Element  ${tender.menu.activeAfterQualification}
 	Підтвердити дію в діалозі
+
+Перевести тендер на статус очікування обробки мостом
+	[Arguments]		${username}  ${tender_uaid}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		[Description] Find tender using uaid and call patch_tender
+	...		[Return] Reply of API
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
+	Wait and Click Element  ${tender.menu.nextStage}
+	Підтвердити дію в діалозі
+
+Активувати другий етап
+	[Arguments]		${username}  ${tender_uaid}
+	[Documentation]
+	...		username:			The name of user
+	...		tender_uaid:		The UA ID of the tender
+	...		[Description] Find tender using uaid and call patch_tender
+	...		[Return] Reply of API
+	Reload Tender And Switch Card  ${username}  ${tender_uaid}
+	Wait and Click Element	${tender.menu.send}
+	Wait For Progress Bar
