@@ -502,15 +502,16 @@ Resource	alltenders_utils.robot
 	Run Keyword And Return  alltenders.Отримати інформацію із документа  ${username}  ${tender_uaid}  ${doc_id}  ${field}
 	
 Отримати інформацію із скарги
-	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${field}  ${award_index}=${None}
+	[Arguments]		${username}  ${tender_uaid}  ${complaint_id}  ${field}  ${object_index}=${None}
 	[Documentation]
 	...		username:		The name of user
 	...		tender_uaid:	The UA ID of the tender
 	...		complaint_id:	The ID of the complaint
 	...		field:			The name of field
-	...		award_index:	The index of the award
-	${index}=  Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}  ${award_index}
-	${value}=  Run Keyword If  '${award_index}' == '${None}'
+	...		object_index:	The index of the complaint object
+	${award_index}=	Set Variable If  "переможця" in "${TEST_NAME}"  ${object_index}  ${None}
+	${index}=		Отримати індекс скарги  ${username}  ${tender_uaid}  ${complaint_id}  ${award_index}
+	${value}=		Run Keyword If  '${award_index}' == '${None}'
 	...		Find And Get Data  complaints[${index}].${field}
 	...		ELSE  Find And Get Data  awards[${award_index}].complaints[${index}].${field}
 	[Return]	${value}
