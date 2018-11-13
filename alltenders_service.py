@@ -88,6 +88,10 @@ def find_document_by_id(data, doc_id):
         for document in complaint.get('documents', []):
             if doc_id in document.get('title', ''):
                 return document
+    for contract in data.get('contracts', []):
+        for document in contract.get('documents', []):
+            if doc_id in document.get('title', ''):
+                return document
     for award in data.get('awards', []):
         for document in award.get('documents', []):
             if doc_id in document.get('title', ''):

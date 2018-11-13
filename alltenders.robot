@@ -100,10 +100,13 @@ Resource	alltenders_utils.robot
 	Switch Browser		                ${username}
 	Go To	                			${USERS.users['${username}'].homepage}
 	Wait For Angular	
+	Wait For Progress Bar
 	Wait and Click Element				${menu.search}
 	Wait and Input Text					${search.filter.values.common}	${tender_uaid}
 	Click Button						${search.filter.search}
 	Wait Until Page Contains			${tender_uaid}					${common.wait}
+	Wait For Progress Bar
+	Sleep  1
 	Run Keyword If  					'${screenshot}' == '${True}'  Capture Page Screenshot
 	Wait and Click Element				${search.grid.tenderInfo.title}//span[text() = "${tender_uaid}"]
 	Wait Until Page Contains Element	${tender.form}					${common.wait}

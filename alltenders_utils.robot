@@ -108,6 +108,7 @@ Reload Tender And Switch Card
 	...		tender_uaid:	The UA ID of the tender
 	...		locator:		The locator to switch
 	Оновити тендер  ${username}  ${tender_uaid}
+	Wait For Progress Bar
 	Wait and Click Element  ${locator}
 	Capture Page Screenshot
 	[Return]	${locator}
@@ -296,4 +297,5 @@ Wait For Progress Bar
 	[Arguments]		${timeout}=${common.wait}
 	[Documentation]
 	...		timeout: Timeout
-	Wait Until Element Is Not Visible	${progress.bar}		${timeout}
+	Wait Until Element Is Not Visible	${progress.bar.blue}		${timeout}
+	Wait Until Element Is Not Visible	${progress.bar.new}    		${timeout}

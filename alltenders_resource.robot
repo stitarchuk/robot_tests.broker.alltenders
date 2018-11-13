@@ -40,7 +40,8 @@ ${login.window.userName}					${dialog.body}//input[@ng-model="$parent.data.email
 ${login.window.password}					${dialog.body}//input[@ng-model="$parent.data.password"]
 ${login.window.apply}						${dialog.footer}//button[@ng-click="actions.apply()"]
 #	--- progress bar ---
-${progress.bar}								xpath=//div[contains(@class, "progress")]
+${progress.bar.blue}						xpath=//div[contains(@class, "progress")]
+${progress.bar.new}							xpath=//div[contains(@class, "blocker-indicator")]
 #	--- create tender window ---
 ${create.tender.type}						${dialog.body}//div[@ng-model="data.type"]
 ${create.tender.create}						${dialog.footer}//button[@ng-click="actions.create()"]
