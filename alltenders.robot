@@ -113,7 +113,6 @@ Resource	alltenders_utils.robot
 	${data}=	                        Find And Get Data
 	${data}=	                        Create Safe Dictionary  ${data}
 	${tender}=							Create Dictionary  data=${data}
-	Run Keyword If  	                '${save_key}' != '${None}'  Set To Dictionary  ${USERS.users['${username}']}  ${save_key}=${tender}
 	[Return]	${tender}
 
 Створити тендер
