@@ -110,10 +110,6 @@ Resource	alltenders_utils.robot
 	Run Keyword If  					'${screenshot}' == '${True}'  Capture Page Screenshot
 	Wait and Click Element				${search.grid.tenderInfo.title}//span[text() = "${tender_uaid}"]
 	Wait Until Page Contains Element	${tender.form}					${common.wait}
-	${data}=	                        Find And Get Data
-	${data}=	                        Create Safe Dictionary  ${data}
-	${tender}=							Create Dictionary  data=${data}
-	[Return]	${tender}
 
 Створити тендер
 	[Arguments]		${username}  ${tender}
